@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+:root {
+  /* --- Professional Palette based on your Sitarahub Logo --- */
+  
+  /* Neutrals - Clean and soft for a premium feel */
+  --background: oklch(0.98 0.01 240); /* Very light, slightly cool gray */
+  --foreground: oklch(0.1 0.02 240);  /* Dark, slightly cool gray for text */
+  --card: oklch(1 0 0);               /* Pure white for cards to pop */
+  --card-foreground: oklch(0.1 0.02 240);
+  --border: oklch(0.9 0.02 240);      /* Soft border */
+
+  /* Primary Brand Color (from your logo) */
+  --primary: oklch(0.6 0.15 195); /* The vibrant teal from your logo */
+  --primary-foreground: oklch(0.98 0.01 240); /* Text on top of the primary color */
+
+  /* Secondary Color - for less important buttons or highlights */
+  --secondary: oklch(0.92 0.03 195); /* A very light, muted version of the teal */
+  --secondary-foreground: oklch(0.4 0.1 195); /* Text on the secondary color */
+  
+  /* Muted & Accent */
+  --muted: oklch(0.95 0.02 240);     /* Slightly darker than the background */
+  --muted-foreground: oklch(0.45 0.02 240); /* Muted text for placeholders, etc. */
+  --accent: oklch(0.7 0.16 195);     /* A brighter, more saturated teal for highlights */
+  --accent-foreground: oklch(0.1 0.02 240);
+
+  /* Functional Colors */
+  --destructive: oklch(0.65 0.22 25); /* A clear, modern red for warnings */
+  --destructive-foreground: oklch(1 0 0);
+  --ring: oklch(0.6 0.15 195 / 0.6); /* Ring color for focus states, slightly transparent */
+  --input: oklch(0.96 0.01 240);     /* Input background */
+
+  /* Radius */
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* --- Dark Theme Palette for Sitarahub --- */
+
+  /* Dark Neutrals */
+  --background: oklch(0.15 0.02 240); /* Deep, cool dark blue-gray */
+  --foreground: oklch(0.95 0.01 240); /* Light, soft text color */
+  --card: oklch(0.2 0.02 240);       /* Slightly lighter card background */
+  --card-foreground: oklch(0.95 0.01 240);
+  --border: oklch(0.3 0.02 240);       /* Subtle border for dark mode */
+
+  /* Primary Brand Color (adjusted for dark mode) */
+  --primary: oklch(0.7 0.16 195); /* Brighter teal to pop on dark backgrounds */
+  --primary-foreground: oklch(0.1 0.02 240); /* Dark text on the bright teal button */
+  
+  /* Secondary Color */
+  --secondary: oklch(0.3 0.03 195); /* A darker, muted teal */
+  --secondary-foreground: oklch(0.95 0.01 240); /* Light text on the secondary color */
+
+  /* Muted & Accent */
+  --muted: oklch(0.25 0.02 240);
+  --muted-foreground: oklch(0.6 0.01 240);
+  --accent: oklch(0.7 0.16 195);
+  --accent-foreground: oklch(0.1 0.02 240);
+
+  /* Functional Colors */
+  --destructive: oklch(0.7 0.2 25); /* Brighter red for visibility on dark */
+  --destructive-foreground: oklch(0.1 0.02 240);
+  --ring: oklch(0.7 0.16 195);
+  --input: oklch(0.25 0.02 240);
+}
+
+/* --- Unchanged sections below --- */
+
+@theme inline {
+  --font-sans: "Geist", "Geist Fallback", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--card); /* Popover should match card color */
+  --color-popover-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+.scrollbar-thumb-muted::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted));
+  border-radius: 9999px;
+}
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
+}
