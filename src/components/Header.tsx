@@ -16,25 +16,20 @@ import {
   Tag,
   Store,
   Loader2,
-  // --- ADDED Icons ---
   Gift,
-  Headset, // Or LifeBuoy if you prefer
+  Headset,
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
-// --- ✨ USE THE UPDATED CONTEXT ✨ ---
 import { useProducts } from "../context/ProductContext";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- Import the real API function and types ---
 import { getPincodeDetails } from "../lib/api";
 
 import logo from "../assets/Sitarahub.avif";
 
-// --- SearchBar Component (No Changes) ---
 function SearchBar() {
-  // ✨ Get categories and the NEW setter function from context ✨
   const { setSearchQuery, setSelectedSearchCategory, categories } =
     useProducts();
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,8 +37,8 @@ function SearchBar() {
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedSearchCategoryState, setSelectedSearchCategoryState] =
-    useState("All"); // Local UI state
-  const dropdownRef = useRef<HTMLFormElement>(null); // Ref for click outside
+    useState("All");
+  const dropdownRef = useRef<HTMLFormElement>(null);
 
   const searchCategories = useMemo(() => {
     const uniqueCats = [
@@ -57,21 +52,19 @@ function SearchBar() {
     e.preventDefault();
     console.log(
       `[SearchBar] Searching for "${searchTerm}" in category: "${selectedSearchCategoryState}"`
-    ); // Debug log
-    setSearchQuery(searchTerm); // Set search term in context
-    // setSelectedSearchCategory is already set via handleCategorySelect
+    );
+    setSearchQuery(searchTerm);
     setIsDropdownOpen(false);
-    navigate("/"); // Navigate to show results
+    navigate("/");
   };
 
   const handleCategorySelect = (category: string) => {
-    console.log(`[SearchBar] Category selected: ${category}`); // Debug log
-    setSelectedSearchCategoryState(category); // Update local UI state
-    setSelectedSearchCategory(category); // ✨ Update the CONTEXT state ✨
+    console.log(`[SearchBar] Category selected: ${category}`);
+    setSelectedSearchCategoryState(category);
+    setSelectedSearchCategory(category);
     setIsDropdownOpen(false);
   };
 
-  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -146,15 +139,15 @@ function SearchBar() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute top-full left-0 mt-1 w-48 bg-card border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto scrollbar-thin" // Increased z-index
+            className="absolute top-full left-0 mt-1 w-48 bg-card border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto scrollbar-thin"
           >
             {/* ✨ Use categories from context ✨ */}
-            {searchCategories.length > 1 ? ( // Check if categories are loaded
+            {searchCategories.length > 1 ? (
               searchCategories.map((category) => (
                 <button
                   key={category}
                   type="button"
-                  onClick={() => handleCategorySelect(category)} // Calls function that updates context
+                  onClick={() => handleCategorySelect(category)}
                   className={`block w-full text-left px-4 py-2 text-sm capitalize hover:bg-muted ${
                     selectedSearchCategoryState === category
                       ? "font-semibold text-primary"
@@ -175,9 +168,6 @@ function SearchBar() {
     </form>
   );
 }
-// --- END OF SearchBar Component ---
-
-// --- PincodeModal Component (UPDATED) ---
 interface PincodeModalProps {
   onClose: () => void;
   onUpdate: (pincode: string, city: string) => void;
@@ -194,7 +184,6 @@ function PincodeModal({
   const [isLoading, setIsLoading] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // --- UPDATED: handleSubmit to match your requested style ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (pincode.length !== 6 || !/^\d+$/.test(pincode)) {
@@ -206,22 +195,17 @@ function PincodeModal({
     setError("");
 
     try {
-      // Call API without explicit 'PostalApiResponse[]' type
       const data = await getPincodeDetails(pincode);
 
-      // Logic adapted from your "goal" snippet
       if (data && data[0].Status === "Success" && data[0].PostOffice) {
         const postOffice = data[0].PostOffice[0];
 
-        // Use modal's onUpdate function
         onUpdate(pincode, postOffice.District);
       } else {
-        // Use modal's setError function
         setError(data[0]?.Message || "Invalid PIN Code");
       }
     } catch (error) {
       console.error("Error fetching pincode data:", error);
-      // Use modal's setError function
       setError("Could not fetch PIN Code details.");
     } finally {
       setIsLoading(false);
@@ -233,7 +217,6 @@ function PincodeModal({
     visible: { opacity: 1 },
   };
 
-  // --- *** FIX IS HERE *** ---
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.9 },
     visible: {
@@ -243,11 +226,10 @@ function PincodeModal({
         type: "spring",
         stiffness: 300,
         damping: 25,
-        // duration: 0.3, // <-- REMOVED: 'duration' is not compatible with 'type: "spring"'
       },
     },
     exit: { opacity: 0, scale: 0.9 },
-  } as const; // <-- ADDED: 'as const' tells TypeScript these are literal types, not general strings.
+  } as const;
 
   return (
     <>
@@ -258,17 +240,17 @@ function PincodeModal({
         initial="hidden"
         animate="visible"
         exit="hidden"
-        onClick={onClose} // Click outside to close
+        onClick={onClose}
       >
         {/* Modal Content */}
         <motion.div
           ref={modalRef}
-          variants={modalVariants} // <-- This will now work
-          initial="hidden" // <-- ADDED: initial prop for modal animation
-          animate="visible" // <-- ADDED: animate prop for modal animation
-          exit="exit" // <-- ADDED: exit prop for modal animation
+          variants={modalVariants} 
+          initial="hidden"
+          animate="visible"
+          exit="exit"
           className="bg-card rounded-lg shadow-2xl w-full max-w-sm"
-          onClick={(e) => e.stopPropagation()} // Prevent click inside from closing
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h2 className="text-lg font-semibold text-foreground">
@@ -324,18 +306,13 @@ function PincodeModal({
     </>
   );
 }
-// --- END OF PincodeModal Component ---
-
-// --- Header Component (No Changes) ---
 export default function Header() {
   const { cart } = useCart();
   const { wishlist } = useWishlist();
-  // --- 1. GET CATEGORIES FROM CONTEXT ---
   const { setSelectedCategory, categories } = useProducts();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  // --- NEW: State for Pincode Modal and Location ---
   const [isPincodeModalOpen, setIsPincodeModalOpen] = useState(false);
   const [deliveryLocation, setDeliveryLocation] = useState({
     pincode: "401203",
@@ -344,7 +321,6 @@ export default function Header() {
 
   const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-  // --- NEW: Handlers for Pincode Modal ---
   const openPincodeModal = () => setIsPincodeModalOpen(true);
   const closePincodeModal = () => setIsPincodeModalOpen(false);
   const handleLocationUpdate = (newPincode: string, newCity: string) => {
@@ -352,9 +328,8 @@ export default function Header() {
     closePincodeModal();
   };
 
-  // This button in bottom nav now only resets sidebar category
   const handleAllClick = () => {
-    setSelectedCategory(""); // Reset only the sidebar category
+    setSelectedCategory("");
     navigate("/");
   };
 
@@ -386,7 +361,7 @@ export default function Header() {
 
   return (
     <motion.header
-      className="bg-card text-foreground sticky top-0 z-40 border-b border-border shadow-md" // z-40 ensures it's below dropdown (z-50)
+      className="bg-card text-foreground sticky top-0 z-40 border-b border-border shadow-md"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -591,7 +566,7 @@ export default function Header() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed top-0 left-0 h-full w-4/5 max-w-sm bg-card text-foreground z-50 md:hidden shadow-lg overflow-y-auto" // Ensure menu is above overlay
+              className="fixed top-0 left-0 h-full w-4/5 max-w-sm bg-card text-foreground z-50 md:hidden shadow-lg overflow-y-auto"
             >
               <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
                 <Link
@@ -616,7 +591,7 @@ export default function Header() {
                   to="/"
                   className={linkStyles}
                   onClick={() => {
-                    handleAllClick(); // Resets sidebar category
+                    handleAllClick();
                     setMobileMenuOpen(false);
                   }}
                 >
@@ -652,15 +627,15 @@ export default function Header() {
 
                 {/* --- Dynamic Category List --- */}
                 {categories
-                  .filter((cat) => cat !== "All") // Exclude "All"
+                  .filter((cat) => cat !== "All")
                   .map((cat) => (
                     <Link
                       key={cat}
-                      to="/" // Navigate to home to show filtered results
+                      to="/"
                       className={linkStyles}
                       onClick={() => {
-                        setSelectedCategory(cat); // Set the category in context
-                        setMobileMenuOpen(false); // Close the menu
+                        setSelectedCategory(cat);
+                        setMobileMenuOpen(false);
                       }}
                     >
                       {/* Using a generic icon, replace if you have specific ones */}
@@ -679,7 +654,7 @@ export default function Header() {
                   <Tag size={20} /> <span className="text-sm">Deals</span>
                 </Link>
                 <Link
-                  to="/sell" // Assuming '/sell' is the correct path
+                  to="/sell"
                   className={linkStyles}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -687,14 +662,14 @@ export default function Header() {
                 </Link>
                 {/* --- ADDED ICONS for Gift Cards & Customer Service --- */}
                 <Link
-                  to="/gift-cards" // Assuming '/gift-cards' is the correct path
+                  to="/gift-cards"
                   className={linkStyles}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Gift size={20} /> <span className="text-sm">Gift Cards</span>
                 </Link>
                 <Link
-                  to="/customer-service" // Assuming '/customer-service' is the correct path
+                  to="/customer-service"
                   className={linkStyles}
                   onClick={() => setMobileMenuOpen(false)}
                 >

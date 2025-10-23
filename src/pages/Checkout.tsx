@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-// --- 1. IMPORT finalTotal ---
 import { useCart } from "../context/CartContext";
 import {
   ArrowLeft,
@@ -27,7 +26,6 @@ import { getPincodeDetails } from "../lib/api";
 import { formatPrice } from "../lib/priceUtils";
 import logo from "../assets/Sitarahub.avif";
 
-// FormInput component (remains unchanged)
 const FormInput = ({
   name,
   value,
@@ -94,13 +92,12 @@ const FormInput = ({
   </div>
 );
 
-// OrderConfirmation component (remains unchanged, formatting applied)
 interface OrderConfirmationProps {
   firstName: string;
   email: string;
   orderId: string;
   estimatedDelivery: string;
-  totalAmount: number; // Keep receiving USD
+  totalAmount: number;
 }
 
 const OrderConfirmation = ({
@@ -108,7 +105,7 @@ const OrderConfirmation = ({
   email,
   orderId,
   estimatedDelivery,
-  totalAmount, // Still USD
+  totalAmount,
 }: OrderConfirmationProps) => {
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
@@ -213,8 +210,7 @@ const OrderConfirmation = ({
 };
 
 export default function Checkout() {
-  // --- 2. GET finalTotal FROM useCart ---
-  const { cart, finalTotal, clearCart } = useCart(); // 'total' & 'finalTotal' are in USD
+  const { cart, finalTotal, clearCart } = useCart();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -234,11 +230,9 @@ export default function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [orderPlaced, setOrderPlaced] = useState(false);
-  // States for order confirmation details
   const [orderId, setOrderId] = useState("");
   const [estimatedDelivery, setEstimatedDelivery] = useState("");
 
-  // --- Empty Cart Screen (No changes) ---
   if (cart.length === 0 && !orderPlaced) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -263,21 +257,18 @@ export default function Checkout() {
     );
   }
 
-  // --- Render OrderConfirmation Component ---
   if (orderPlaced) {
-    // --- Pass finalTotal (USD) to OrderConfirmation ---
     return (
       <OrderConfirmation
         firstName={formData.firstName}
         email={formData.email}
         orderId={orderId}
         estimatedDelivery={estimatedDelivery}
-        totalAmount={finalTotal} // Pass the final USD total (after discounts)
+        totalAmount={finalTotal}
       />
     );
   }
 
-  // --- Validation Logic (No changes) ---
   const validateField = (name: string, value: string) => {
     let error = "";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -315,7 +306,6 @@ export default function Checkout() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // Clear error for this field as the user types
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -327,7 +317,6 @@ export default function Checkout() {
     const { name, value } = e.target;
     validateField(name, value);
 
-    // Special blur logic for zipCode
     if (name === "zipCode") {
       handleZipCodeBlur(value);
     }
@@ -371,16 +360,13 @@ export default function Checkout() {
     const newErrors: Partial<typeof formData> = {};
 
     (Object.keys(formData) as Array<keyof typeof formData>).forEach((key) => {
-      // For city and state, only require if zipCode is valid and they are empty
       if (key === "city" || key === "state") {
         if (!formData[key] && !errors.zipCode) {
-          // Only error if zipCode didn't fill it
           newErrors[key] = "This field is required";
           isValid = false;
         }
       } else if (!validateField(key, formData[key])) {
         isValid = false;
-        // Ensure error is set for empty fields on submit
         if (!formData[key]) newErrors[key] = "This field is required";
       }
     });
@@ -393,18 +379,15 @@ export default function Checkout() {
       return;
     }
 
-    // --- All Good! Proceed to submit ---
     console.log("Form Submitted:", formData);
 
-    // Simulate API call for order submission
     setTimeout(() => {
-      // Generate dummy order ID and delivery date
       const dummyOrderId = Math.random()
         .toString(36)
         .substring(2, 10)
         .toUpperCase();
       const deliveryDate = new Date();
-      deliveryDate.setDate(deliveryDate.getDate() + 5); // 5 days from now
+      deliveryDate.setDate(deliveryDate.getDate() + 5);
       const estimatedDeliveryString = deliveryDate.toLocaleDateString("en-US", {
         weekday: "short",
         month: "short",
@@ -419,10 +402,8 @@ export default function Checkout() {
     }, 1500);
   };
 
-  // --- 3. Grand Total is now finalTotal (USD) ---
   const grandTotalUSD = finalTotal;
 
-  // --- Checkout Form ---
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <ToastContainer position="top-right" autoClose={3000} theme="colored" />
@@ -608,7 +589,6 @@ export default function Checkout() {
                     Placing Order...
                   </>
                 ) : (
-                  // --- 4. FORMAT Button Text (using finalTotal) ---
                   `Place Order - ${formatPrice(grandTotalUSD)}`
                 )}
               </motion.button>
@@ -642,7 +622,9 @@ export default function Checkout() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
                   {/* --- Use original total for subtotal display --- */}
-                  <span className="font-semibold">{formatPrice(finalTotal)}</span>
+                  <span className="font-semibold">
+                    {formatPrice(finalTotal)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>

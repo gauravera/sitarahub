@@ -15,7 +15,6 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // ... (your existing validation logic)
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
@@ -34,8 +33,6 @@ export default function LoginPage() {
   };
 
   return (
-    // --- UPDATED ---
-    // This div now centers the form on the *entire page* with a light background
     <div className="flex items-center justify-center min-h-screen bg-slate-100">
       <ToastContainer
         position="top-right"
@@ -49,7 +46,7 @@ export default function LoginPage() {
       />
 
       <motion.div
-        className="max-w-md mx-auto w-full px-4" // Added w-full and px-4 for mobile
+        className="max-w-md mx-auto w-full px-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -100,7 +97,6 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  // --- UPDATED --- Using standard Tailwind colors
                   className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
@@ -129,7 +125,6 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  // --- UPDATED --- Using standard Tailwind colors
                   className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
@@ -140,7 +135,6 @@ export default function LoginPage() {
               type="submit"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              // --- UPDATED --- Using standard Tailwind colors
               className="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition-colors font-bold mt-6"
             >
               Sign In
@@ -153,7 +147,6 @@ export default function LoginPage() {
               Don't have an account?{" "}
               <Link
                 to="/signup"
-                // --- UPDATED --- Using standard Tailwind colors
                 className="text-teal-600 hover:underline font-medium"
               >
                 Sign up
@@ -173,7 +166,6 @@ export default function LoginPage() {
         <div className="mt-6 text-center">
           <Link
             to="/"
-            // --- UPDATED --- Using standard Tailwind colors
             className="text-teal-600 hover:underline text-sm font-medium"
           >
             ← Back to Store

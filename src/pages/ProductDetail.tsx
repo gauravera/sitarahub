@@ -5,7 +5,6 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
-// --- 1. IMPORT useProducts ---
 import { useProducts } from "../context/ProductContext";
 import {
   Star,
@@ -28,14 +27,12 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const navigate = useNavigate();
 
-  // --- 2. GET PRODUCTS AND LOADING STATE FROM CONTEXT ---
   const { products, loading: contextLoading } = useProducts();
 
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const isFavorite = product ? wishlist.includes(product.id) : false;
 
-  // This is correct: it passes the USD price to the hook
   const { discountPercent, savedAmount, displayPrice } = useProductDiscount(
     product?.id,
     product?.price
@@ -55,28 +52,22 @@ export default function ProductDetail() {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // --- 3. UPDATED FETCH LOGIC ---
   useEffect(() => {
     if (!id) {
       setLoading(false);
       return;
     }
 
-    // Function to handle fetching
     const loadProduct = async () => {
-      // Wait for the context to finish loading
       if (!contextLoading) {
         const productId = Number(id);
 
-        // 1. Try to find the product in context
         const productFromContext = products.find((p) => p.id === productId);
 
         if (productFromContext) {
-          // 2. Found it! Set from context.
           setProduct(productFromContext);
           setLoading(false);
         } else {
-          // 3. Not in context (e.g., direct page load), so fetch it.
           console.warn(
             `Product ${id} not found in context. Fetching individually.`
           );
@@ -93,17 +84,15 @@ export default function ProductDetail() {
     };
 
     loadProduct();
-    // This effect now runs when the 'id' changes OR when the context finishes loading
   }, [id, products, contextLoading]);
 
-  // This is correct: it passes USD prices to the cart context
   const handleAddToCart = useCallback(() => {
     if (product) {
       const itemBase = {
         id: product.id,
         title: product.title,
-        price: product.price, // Original USD Price
-        discountedPrice: displayPrice, // Discounted USD Price
+        price: product.price, 
+        discountedPrice: displayPrice, 
         discountPercent: discountPercent,
         image: product.image,
       };

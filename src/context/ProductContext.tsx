@@ -10,17 +10,16 @@ import React, {
 import type { ApiProduct } from "../lib/api";
 import { getProducts } from "../lib/api";
 
-// Local type extending ApiProduct
 type Product = ApiProduct & {
   discountedPrice?: number;
 };
 
 interface Filters {
   searchQuery: string;
-  selectedCategory: string; // Sidebar category
+  selectedCategory: string;
   priceRange: { min: number; max: number };
   sortOption: string;
-  selectedSearchCategory: string; // Search bar category
+  selectedSearchCategory: string;
 }
 
 interface ProductContextType {
@@ -28,7 +27,6 @@ interface ProductContextType {
   filteredProducts: Product[];
   categories: string[];
   loading: boolean;
-  // --- 1. ADD ERROR TO TYPE ---
   error: string | null;
   filters: Filters;
   setSearchQuery: (query: string) => void;
@@ -41,18 +39,14 @@ interface ProductContextType {
 
 const ProductContext = createContext<ProductContextType | null>(null);
 
-// --- 1. DEFINE CONSTANTS IN USD ---
-// This now matches the MAX_PRICE_USD in FilterSidebar
 const MAX_PRICE_USD = 1000;
-// We no longer need USD_TO_INR_RATE or MAX_PRICE_INR here.
 
 const initialFilters: Filters = {
   searchQuery: "",
   selectedCategory: "",
-  // The filter range is now in USD
   priceRange: { min: 0, max: MAX_PRICE_USD },
   sortOption: "",
-  selectedSearchCategory: "All", // Default search category
+  selectedSearchCategory: "All",
 };
 
 export const ProductProvider = ({
@@ -64,25 +58,17 @@ export const ProductProvider = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(initialFilters);
-  // --- 2. ADD ERROR STATE ---
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch products and categories
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        setError(null); // Clear previous errors
-        // data contains products with prices in USD
+        setError(null);
         const data = await getProducts();
 
-        // --- KEY FIX: REMOVED INR CONVERSION ---
-        // We store the original USD-priced products directly in state.
-        // All filtering and logic will be done in USD.
         setProducts(data);
-        // --- END OF FIX ---
 
-        // Extract unique categories
         const uniqueCategories = [
           "All",
           ...new Set(data.map((p: ApiProduct) => p.category)),
@@ -90,7 +76,6 @@ export const ProductProvider = ({
         setCategories(uniqueCategories);
       } catch (err) {
         console.error("Error fetching products in context:", err);
-        // --- 3. SET ERROR STATE ON CATCH ---
         setError(
           err instanceof Error ? err.message : "An unknown error occurred"
         );
@@ -101,12 +86,9 @@ export const ProductProvider = ({
     fetchProducts();
   }, []);
 
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
     const tempProducts = products.filter((p) => {
-      // 'p.price' is now the original USD price
       const price = p.price;
-      // 'filters.priceRange' is now also in USD
       const { min, max } = filters.priceRange;
 
       const searchMatch =
@@ -118,14 +100,10 @@ export const ProductProvider = ({
         !filters.selectedCategory ||
         p.category.toLowerCase() === filters.selectedCategory.toLowerCase();
 
-      // --- Price Overlap Fix (Now correctly uses USD) ---
-      // This checks if the filter is "Over $350" (or "Over ₹...")
       const isLastRange = max === MAX_PRICE_USD;
 
-      // This logic now correctly compares USD (price) with USD (min, max)
       const priceMatch =
         price >= min && (isLastRange ? price <= max : price < max);
-      // --- End of Price Overlap Fix ---
 
       const searchCategoryMatch =
         filters.selectedSearchCategory === "All" ||
@@ -137,7 +115,6 @@ export const ProductProvider = ({
       );
     });
 
-    // --- Sorting Logic (This works perfectly with USD prices) ---
     const sorted = [...tempProducts];
     switch (filters.sortOption) {
       case "price-low":
@@ -156,7 +133,6 @@ export const ProductProvider = ({
     return sorted;
   }, [products, filters]);
 
-  // --- Filter Setter Functions (These receive USD values from the sidebar) ---
   const setSearchQuery = (query: string) =>
     setFilters((prev) => ({ ...prev, searchQuery: query }));
 
@@ -181,7 +157,6 @@ export const ProductProvider = ({
         filteredProducts,
         categories,
         loading,
-        // --- 4. PROVIDE ERROR STATE ---
         error,
         filters,
         setSearchQuery,

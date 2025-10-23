@@ -9,7 +9,6 @@ import {
   useCallback,
 } from "react";
 
-// --- Interfaces and Types ---
 interface CartItem {
   id: number;
   title: string;
@@ -22,7 +21,6 @@ interface CartItem {
 
 interface CartContextType {
   cart: CartItem[];
-  // --- UPDATED: Now accepts an optional quantity to add ---
   addToCart: (item: Omit<CartItem, "quantity">, quantityToAdd?: number) => void;
   removeFromCart: (id: number) => void;
   decreaseQuantity: (id: number) => void;
@@ -36,26 +34,21 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// --- Provider Component ---
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  // --- ACTIONS (Memoized with useCallback) ---
 
-  // --- UPDATED: This function is now more powerful ---
   const addToCart = useCallback(
     (item: Omit<CartItem, "quantity">, quantityToAdd: number = 1) => {
       setCart((prev) => {
         const existing = prev.find((i) => i.id === item.id);
         if (existing) {
-          // Increment quantity by the amount passed
           return prev.map((i) =>
             i.id === item.id
               ? { ...i, quantity: i.quantity + quantityToAdd }
               : i
           );
         }
-        // Add new item with the specified quantity
         return [...prev, { ...item, quantity: quantityToAdd }];
       });
     },
@@ -79,35 +72,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [removeFromCart]
   );
 
-  // Decrease quantity by 1
   const decreaseQuantity = useCallback((id: number) => {
     setCart(
       (prev) =>
         prev
           .map((item) =>
             item.id === id
-              ? { ...item, quantity: item.quantity - 1 } // Decrease quantity
+              ? { ...item, quantity: item.quantity - 1 }
               : item
           )
-          .filter((item) => item.quantity > 0) // Remove if quantity reaches 0
+          .filter((item) => item.quantity > 0)
     );
   }, []);
-  // Note: The above decreaseQuantity is slightly different from your original.
-  // Your original `decreaseQuantity` would never let an item be removed,
-  // it would stay at 1. This new one will remove it if it hits 0,
-  // which is better for the ProductCard logic (Trash icon -> Add button).
-  //
-  // If you want your original logic back (never remove, just stop at 1):
-  // const decreaseQuantity = useCallback((id: number) => {
-  //   setCart((prev) =>
-  //     prev.map((item) =>
-  //       item.id === id
-  //         ? { ...item, quantity: Math.max(1, item.quantity - 1) } // Stops at 1
-  //         : item
-  //     )
-  //   );
-  // }, []);
-
   const clearCart = useCallback(() => setCart([]), []);
 
   const getItemQuantity = useCallback(
@@ -116,8 +92,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     },
     [cart]
   );
-
-  // --- DERIVED STATE (Memoized with useMemo) ---
 
   const total = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -139,7 +113,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [total, discountTotal]
   );
 
-  // --- Context Value ---
   const value = useMemo(
     () => ({
       cart,

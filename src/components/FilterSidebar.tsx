@@ -1,6 +1,5 @@
 "use client";
 
-// --- 2. IMPORT SlidersHorizontal (ChevronDown removed) ---
 import { X, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,22 +9,16 @@ import { formatPrice } from "../lib/priceUtils";
 interface FilterSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  // --- 1. Made onOpen optional ---
   onOpen?: () => void;
 }
 
 export default function FilterSidebar({
   isOpen,
   onClose,
-  onOpen, // Destructure the new prop
+  onOpen,
 }: FilterSidebarProps) {
   const { setSelectedCategory, setPriceRange, resetFilters, filters } =
     useProducts();
-
-  // --- 3. REMOVED STATE/REF ---
-  // const [isPriceSortOpen, setIsPriceSortOpen] = useState(false);
-  // const priceSortRef = useRef<HTMLDivElement>(null);
-  // --- End of Update ---
 
   const categories = [
     "electronics",
@@ -70,24 +63,16 @@ export default function FilterSidebar({
     if (window.innerWidth < 768) setTimeout(onClose, 150);
   };
 
-  // Close sidebar with Escape key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
-        // --- 4. REMOVED ---
-        // setIsPriceSortOpen(false);
       }
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
-  // --- 5. REMOVED PRICE SORT DROPDOWN (Click outside handler) ---
-  // useEffect(() => { ... }, []);
-  // --- End of Update ---
-
-  // Prevent body scroll when sidebar is open on mobile
   useEffect(() => {
     if (isOpen && window.innerWidth < 768) {
       document.body.style.overflow = "hidden";
@@ -98,10 +83,6 @@ export default function FilterSidebar({
       document.body.style.overflow = "";
     };
   }, [isOpen]);
-
-  // --- 6. REMOVED currentPriceLabel HELPER ---
-  // const currentPriceLabel = () => { ... };
-  // --- End of Update ---
 
   return (
     <>
@@ -126,7 +107,6 @@ export default function FilterSidebar({
 
           {/* --- NEW "Open Filters" Button --- */}
           <motion.button
-            // --- 2. Added check before calling onOpen ---
             onClick={onOpen ? onOpen : undefined}
             whileTap={{ scale: 0.96 }}
             className="flex-1 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition bg-muted hover:bg-muted/80 text-foreground"

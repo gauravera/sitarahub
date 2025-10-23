@@ -5,16 +5,14 @@ import { CartProvider } from "./context/CartContext";
 import { ProductProvider } from "./context/ProductContext";
 import { WishlistProvider } from "./context/WishlistContext";
 
-// Import your new layout
 import Layout from "./components/Layout"; 
 
-// Import your pages
 import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
-import Login from "./pages/Login"; // Your full-screen login page
+import Login from "./pages/Login"; 
 import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {

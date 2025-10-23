@@ -38,7 +38,6 @@ export default function Wishlist() {
       id: product.id,
       title: product.title,
       price: product.price,
-      // NOTE: You might want to get the actual discounted price here if available
       discountedPrice: product.price,
       discountPercent: 0,
       image: product.image,
@@ -139,7 +138,6 @@ export default function Wishlist() {
                   className="w-full h-full object-contain p-4"
                 />
                 <motion.button
-                  // ✅ 4. Updated to provide feedback
                   onClick={() =>
                     handleRemoveFromWishlist(product.id, product.title)
                   }

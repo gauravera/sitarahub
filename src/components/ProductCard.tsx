@@ -7,18 +7,16 @@ import {
   Heart,
   ShoppingCart,
   Zap,
-  Trash2, // For removing
-  Minus, // For decreasing
-  Plus, // For increasing
+  Trash2,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../lib/priceUtils";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-// --- 1. IMPORT THE HOOK ---
-import { useProductDiscount } from "../hooks/useProductDiscount"; // Assuming you created this file
-
+import { useProductDiscount } from "../hooks/useProductDiscount"; 
 interface Product {
   id: number;
   title: string;
@@ -47,15 +45,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const quantity = getItemQuantity(product.id);
 
-  // --- 2. USE THE HOOK ---
-  // Replaced the old useMemo hooks with our new custom hook
-  // This is now the single source of truth for discount logic
   const { discountPercent, savedAmount, displayPrice } = useProductDiscount(
     product.id,
     product.price
   );
-
-  // --- (Old discount logic removed) ---
 
   const cartItem = useMemo(
     () => ({
@@ -75,8 +68,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       discountPercent,
     ]
   );
-
-  // --- (Animation, Navigation, and Event Handlers are unchanged) ---
 
   const imageVariants = {
     hover: { scale: 1.1, transition: { duration: 0.3 } },
@@ -184,8 +175,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             src={product.image || "/placeholder.svg"}
             alt={product.title}
             className="w-full h-full object-contain p-4"
-            variants={imageVariants} // --- MODIFIED: Prop moved here ---
-            whileHover="hover" // --- MODIFIED: Prop moved here ---
+            variants={imageVariants}
+            whileHover="hover"
           />
 
           {/* This now uses the correct discountPercent */}

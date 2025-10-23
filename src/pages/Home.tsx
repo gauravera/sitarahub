@@ -14,7 +14,6 @@ export default function Home() {
   const { filteredProducts, loading, error } = useProducts();
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // Show toast if there is an error
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -74,7 +73,6 @@ export default function Home() {
               <FilterSidebar
                 isOpen={true}
                 onClose={() => {}}
-                // --- onOpen REMOVED (Not needed for desktop) ---
               />{" "}
             </div>
           </div>
@@ -98,7 +96,6 @@ export default function Home() {
               <FilterSidebar
                 isOpen={filterOpen}
                 onClose={() => setFilterOpen(false)}
-                // --- onOpen ADDED (This fixes the error) ---
                 onOpen={() => setFilterOpen(true)}
               />
             </div>
