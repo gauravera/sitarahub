@@ -79,6 +79,8 @@ Start the development server:
 npm run dev
 # or
 yarn dev
-
+```
 
 Open http://localhost:5173 (or your specified port) in your browser to view the application.
+
+
