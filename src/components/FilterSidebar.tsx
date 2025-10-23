@@ -1,18 +1,32 @@
 "use client";
 
-import { X, RotateCcw } from "lucide-react";
-import { useEffect } from "react";
+// --- 2. IMPORT SlidersHorizontal (ChevronDown removed) ---
+import { X, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { useEffect,  } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProducts } from "../context/ProductContext";
+import { formatPrice } from "../lib/priceUtils";
 
 interface FilterSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  // --- 1. ADD onOpen PROP ---
+  // This is needed for the new "Filters" button in the mobile bar
+  onOpen: () => void;
 }
 
-export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
+export default function FilterSidebar({
+  isOpen,
+  onClose,
+  onOpen, // Destructure the new prop
+}: FilterSidebarProps) {
   const { setSelectedCategory, setPriceRange, resetFilters, filters } =
     useProducts();
+
+  // --- 3. REMOVED STATE/REF ---
+  // const [isPriceSortOpen, setIsPriceSortOpen] = useState(false);
+  // const priceSortRef = useRef<HTMLDivElement>(null);
+  // --- End of Update ---
 
   const categories = [
     "electronics",
@@ -21,9 +35,14 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
     "women's clothing",
   ];
 
-  // --- FIX APPLIED ---
-  // Added `as const` to tell TypeScript these are literal,
-  // read-only values, not general strings (e.g., type: "tween").
+  const MAX_PRICE_USD = 1000;
+  const priceRanges = [
+    { label: `Under ${formatPrice(60)}`, min: 0, max: 60 },
+    { label: `${formatPrice(60)} - ${formatPrice(175)}`, min: 60, max: 175 },
+    { label: `${formatPrice(175)} - ${formatPrice(350)}`, min: 175, max: 350 },
+    { label: `Over ${formatPrice(350)}`, min: 350, max: MAX_PRICE_USD },
+  ];
+
   const sidebarVariants = {
     hidden: { x: "-100%", opacity: 0 },
     visible: { x: 0, opacity: 1, transition: { type: "tween", duration: 0.3 } },
@@ -32,7 +51,7 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
       opacity: 0,
       transition: { type: "tween", duration: 0.25 },
     },
-  } as const; // <-- FIX IS HERE
+  } as const;
 
   const itemVariants = {
     hidden: { opacity: 0, x: -8 },
@@ -41,34 +60,63 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
       x: 0,
       transition: { delay: i * 0.05 },
     }),
-  } as const; // <-- Added here for consistency
-  // --- END OF FIX ---
+  } as const;
 
-  // ✅ Determine if any filter is active
+  const dropdownVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: -10 },
+    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.15 } },
+    exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.1 } },
+  } as const;
+
   const isFilterActive =
     (filters.selectedCategory && filters.selectedCategory !== "") ||
     filters.priceRange.min > 0 ||
-    filters.priceRange.max < 1000;
+    filters.priceRange.max < MAX_PRICE_USD;
 
   const handleCloseOnMobile = () => {
     if (window.innerWidth < 768) setTimeout(onClose, 150);
   };
 
-  // ✅ Close sidebar with Escape key
+  // Close sidebar with Escape key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        // --- 4. REMOVED ---
+        // setIsPriceSortOpen(false);
+      }
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
+  // --- 5. REMOVED PRICE SORT DROPDOWN (Click outside handler) ---
+  // useEffect(() => { ... }, []);
+  // --- End of Update ---
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 768) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  // --- 6. REMOVED currentPriceLabel HELPER ---
+  // const currentPriceLabel = () => { ... };
+  // --- End of Update ---
+
   return (
     <>
-      {/* ---------- Reset Button and Filter Summary for Mobile ---------- */}
+      {/* ---------- Mobile Top Bar ---------- */}
       <div className="md:hidden w-full bg-card border-b border-border sticky top-0 z-30 px-4 py-3 flex flex-col gap-2 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          {/* 🧩 Existing Open Filter button is outside — this only adds Reset beside it */}
+        {/* --- 7. UPDATED BUTTON LAYOUT --- */}
+        <div className="flex items-center justify-between gap-3 relative">
+          {/* Reset Button (Unchanged, still flex-1) */}
           <motion.button
             onClick={isFilterActive ? resetFilters : undefined}
             whileTap={isFilterActive ? { scale: 0.96 } : {}}
@@ -82,9 +130,23 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
             <RotateCcw size={18} />
             Reset
           </motion.button>
-        </div>
 
-        {/* Active Filter Summary */}
+          {/* --- NEW "Open Filters" Button --- */}
+          <motion.button
+            onClick={onOpen}
+            whileTap={{ scale: 0.96 }}
+            className="flex-1 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition bg-muted hover:bg-muted/80 text-foreground"
+          >
+            <SlidersHorizontal size={18} />
+            Filters
+          </motion.button>
+          {/* --- END OF NEW BUTTON --- */}
+
+          {/* --- REMOVED Price Sort Button & Dropdown --- */}
+        </div>
+        {/* --- END OF UPDATE --- */}
+
+        {/* --- Active Filter Summary (Unchanged) --- */}
         {isFilterActive && (
           <div className="flex flex-col text-sm text-muted-foreground mt-1">
             {filters.selectedCategory && (
@@ -93,14 +155,17 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                 {filters.selectedCategory}
               </span>
             )}
-            {(filters.priceRange.min > 0 || filters.priceRange.max < 1000) && (
+            {(filters.priceRange.min > 0 ||
+              filters.priceRange.max < MAX_PRICE_USD) && (
               <span>
                 <span className="font-medium text-foreground">Price:</span>{" "}
                 {filters.priceRange.min === 0
-                  ? `Under $${filters.priceRange.max}`
-                  : filters.priceRange.max === 1000
-                  ? `Over $${filters.priceRange.min}`
-                  : `$${filters.priceRange.min} - $${filters.priceRange.max}`}
+                  ? `Under ${formatPrice(filters.priceRange.max)}`
+                  : filters.priceRange.max === MAX_PRICE_USD
+                  ? `Over ${formatPrice(filters.priceRange.min)}`
+                  : `${formatPrice(filters.priceRange.min)} - ${formatPrice(
+                      filters.priceRange.max
+                    )}`}
               </span>
             )}
           </div>
@@ -114,45 +179,63 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
             {/* Mobile Overlay */}
             <motion.div
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-              onClick={() => {
-                onClose();
-                document.body.style.overflow = "";
-              }}
+              onClick={onClose}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             />
 
-            {/* Sidebar Panel */}
+            {/* Sidebar Panel (Unchanged from here down) */}
             <motion.aside
               variants={sidebarVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed left-0 top-0 bottom-0 w-72 bg-card border-r border-border z-50 shadow-xl md:relative md:w-full md:shadow-none md:rounded-xl md:border md:h-auto md:max-h-[calc(100vh-120px)] flex flex-col"
+              className="fixed left-0 top-0 bottom-0 w-72 bg-card border-r border-border z-50 shadow-xl md:relative md:w-full md:shadow-none md:rounded-xl md:border md:h-fit flex flex-col"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-card z-10 flex items-center justify-between px-5 py-4 border-b border-border shadow-sm">
-                <h2 className="text-lg font-semibold text-foreground">
-                  Filters
-                </h2>
-                <motion.button
-                  onClick={() => {
-                    onClose();
-                    document.body.style.overflow = "";
-                  }}
-                  className="md:hidden text-muted-foreground hover:text-foreground"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label="Close filters"
+              <div className="sticky top-0 bg-card z-10 px-5 py-4 border-b border-border shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Filters
+                  </h2>
+                  <motion.button
+                    onClick={onClose}
+                    className="md:hidden text-muted-foreground hover:text-foreground"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Close filters"
+                  >
+                    <X size={22} />
+                  </motion.button>
+                </div>
+
+                {/* Clear Filters Button */}
+                <motion.div
+                  className="mt-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
                 >
-                  <X size={22} />
-                </motion.button>
+                  <motion.button
+                    onClick={isFilterActive ? resetFilters : undefined}
+                    disabled={!isFilterActive}
+                    whileTap={isFilterActive ? { scale: 0.97 } : {}}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition text-sm ${
+                      isFilterActive
+                        ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                        : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                    }`}
+                  >
+                    <RotateCcw size={16} />
+                    Clear Filters
+                  </motion.button>
+                </motion.div>
               </div>
 
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto px-5 py-5 space-y-10 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-                {/* Category Filter */}
+              {/* Content Area */}
+              <div className="flex-1 px-5 py-5 space-y-10">
+                {/* --- Category Filter (Unchanged) --- */}
                 <motion.div
                   initial="hidden"
                   animate="visible"
@@ -203,7 +286,7 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                   </div>
                 </motion.div>
 
-                {/* Price Range */}
+                {/* --- Price Range Buttons (Unchanged) --- */}
                 <motion.div
                   initial="hidden"
                   animate="visible"
@@ -215,12 +298,7 @@ export default function FilterSidebar({ isOpen, onClose }: FilterSidebarProps) {
                     Price Range
                   </h3>
                   <div className="space-y-2">
-                    {[
-                      { label: "Under $100", min: 0, max: 100 },
-                      { label: "$100 - $300", min: 100, max: 300 },
-                      { label: "$300 - $500", min: 300, max: 500 },
-                      { label: "Over $500", min: 500, max: 1000 },
-                    ].map((range, i) => {
+                    {priceRanges.map((range, i) => {
                       const isActive =
                         filters.priceRange.min === range.min &&
                         filters.priceRange.max === range.max;

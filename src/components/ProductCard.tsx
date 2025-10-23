@@ -1,16 +1,23 @@
 "use client";
 
+import { useNavigate } from "react-router-dom";
 import React, { useCallback, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Star, Heart, ShoppingCart, Zap } from "lucide-react";
+import {
+  Star,
+  Heart,
+  ShoppingCart,
+  Zap,
+  Trash2, // For removing
+  Minus, // For decreasing
+  Plus, // For increasing
+} from "lucide-react";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../lib/priceUtils";
 import { motion } from "framer-motion";
-import { toast } from "react-toastify"; // --- ADDED ---
-
-// Create a motion-enabled Link component
-const MotionLink = motion(Link);
+import { toast } from "react-toastify";
+// --- 1. IMPORT THE HOOK ---
+import { useProductDiscount } from "../hooks/useProductDiscount"; // Assuming you created this file
 
 interface Product {
   id: number;
@@ -31,30 +38,24 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
-  const { addToCart } = useCart();
+
+  const { addToCart, decreaseQuantity, removeFromCart, getItemQuantity } =
+    useCart();
+
   const navigate = useNavigate();
   const inWishlist = isInWishlist(product.id);
 
-  // --- Derived State (Memoized) ---
-  const discountPercent = useMemo(
-    () =>
-      product.discountPercent ||
-      (product.discountedPrice !== undefined
-        ? Math.round(
-            ((product.price - product.discountedPrice) / product.price) * 100
-          )
-        : 0),
-    [product.discountPercent, product.discountedPrice, product.price]
+  const quantity = getItemQuantity(product.id);
+
+  // --- 2. USE THE HOOK ---
+  // Replaced the old useMemo hooks with our new custom hook
+  // This is now the single source of truth for discount logic
+  const { discountPercent, savedAmount, displayPrice } = useProductDiscount(
+    product.id,
+    product.price
   );
 
-  // --- UPDATED: Memoized for consistency ---
-  const displayPrice = useMemo(
-    () =>
-      product.discountedPrice !== undefined
-        ? product.discountedPrice
-        : product.price,
-    [product.discountedPrice, product.price]
-  );
+  // --- (Old discount logic removed) ---
 
   const cartItem = useMemo(
     () => ({
@@ -65,7 +66,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       discountPercent: discountPercent,
       image: product.image,
     }),
-    // --- UPDATED: More granular dependencies ---
     [
       product.id,
       product.title,
@@ -76,28 +76,26 @@ export default function ProductCard({ product }: ProductCardProps) {
     ]
   );
 
-  // --- Animation Variants ---
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4 },
-    },
-  };
+  // --- (Animation, Navigation, and Event Handlers are unchanged) ---
 
   const imageVariants = {
     hover: { scale: 1.1, transition: { duration: 0.3 } },
   };
 
-  // --- Optimized Event Handlers (Memoized) ---
+  const handleNavigate = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      navigate(`/product/${product.id}`);
+    },
+    [navigate, product.id]
+  );
+
   const handleWishlistToggle = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (inWishlist) {
         removeFromWishlist(product.id);
-        // --- ADDED: Toast notification ---
         toast.info(
           `${product.title.substring(0, 20)}... removed from wishlist.`,
           {
@@ -105,8 +103,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             autoClose: 2000,
           }
         );
-      } // ...
-      else {
+      } else {
         addToWishlist(product.id);
         toast.success(
           `${product.title.substring(0, 20)}... added to wishlist!`,
@@ -117,103 +114,110 @@ export default function ProductCard({ product }: ProductCardProps) {
           }
         );
       }
-      // ...
     },
-    // --- UPDATED: Added `product` to dependencies ---
-    [
-      inWishlist,
-      addToWishlist,
-      removeFromWishlist,
-      product, // Pass the whole product
-    ]
+    [inWishlist, addToWishlist, removeFromWishlist, product]
   );
 
-  const handleAddToCart = useCallback(
+  const handleIncrease = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       addToCart(cartItem);
-      // --- ADDED: Toast notification ---
-      toast.success(`${product.title.substring(0, 20)}... added to cart!`, {
+      if (quantity === 0) {
+        toast.success(`${product.title.substring(0, 20)}... added to cart!`, {
+          position: "top-right",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      }
+    },
+    [addToCart, cartItem, product.title, quantity]
+  );
+
+  const handleDecrease = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      decreaseQuantity(product.id);
+    },
+    [decreaseQuantity, product.id]
+  );
+
+  const handleRemove = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeFromCart(product.id);
+      toast.error(`${product.title.substring(0, 20)}... removed from cart.`, {
         position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
+        autoClose: 2000,
       });
     },
-    // --- UPDATED: Added `product.title` for toast ---
-    [addToCart, cartItem, product.title]
+    [removeFromCart, product.id, product.title]
   );
 
   const handleBuyNow = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      addToCart(cartItem);
+      if (quantity === 0) {
+        addToCart(cartItem);
+      }
       navigate("/cart");
     },
-    [addToCart, cartItem, navigate]
+    [addToCart, cartItem, navigate, quantity]
   );
 
   return (
-    <MotionLink
-      to={`/product/${product.id}`}
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      whileHover={{ y: -5 }}
+    <motion.div
       transition={{ type: "spring", stiffness: 300 }}
       className="block h-full"
-      aria-label={`View details for ${product.title}`}
     >
       <div className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all hover:border-primary/30 group h-full flex flex-col">
-        {/* --- IMAGE CONTAINER --- */}
-        <motion.div
-          className="relative w-full h-48 bg-white overflow-hidden"
-          variants={imageVariants}
-          whileHover="hover"
+        {/* --- MODIFIED: Changed from motion.div to div, removed variants/whileHover --- */}
+        <div
+          className="relative w-full h-48 bg-white overflow-hidden cursor-pointer"
+          onClick={handleNavigate}
         >
-          <img
+          {/* --- MODIFIED: Changed from img to motion.img, added variants/whileHover --- */}
+          <motion.img
             src={product.image || "/placeholder.svg"}
             alt={product.title}
             className="w-full h-full object-contain p-4"
+            variants={imageVariants} // --- MODIFIED: Prop moved here ---
+            whileHover="hover" // --- MODIFIED: Prop moved here ---
           />
 
-          {/* --- DISCOUNT PERCENTAGE CIRCLE (Top-Left) --- */}
+          {/* This now uses the correct discountPercent */}
           {discountPercent > 0 && (
-            <motion.div
-              className="absolute top-3 left-3 bg-red-500 text-white rounded-full w-14 h-14 flex items-center justify-center font-bold text-sm shadow-lg z-10"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              aria-hidden="true"
-            >
+            <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold rounded-full w-10 h-10 flex items-center justify-center shadow-md">
               -{discountPercent}%
-            </motion.div>
+            </div>
           )}
 
-          {/* --- WISHLIST BUTTON (Top-Right) --- */}
           <motion.button
             onClick={handleWishlistToggle}
             aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-            className={`absolute top-3 right-3 p-2 rounded-lg transition-colors z-10 ${
+            className={`absolute top-2 right-2 p-2 rounded-full transition-colors shadow-sm ${
               inWishlist
-                ? "bg-accent text-accent-foreground"
-                : "bg-muted text-muted-foreground hover:bg-border"
+                ? "bg-red-100 text-red-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Heart size={20} fill={inWishlist ? "currentColor" : "none"} />
+            <Heart size={18} fill={inWishlist ? "currentColor" : "none"} />
           </motion.button>
-        </motion.div>
+        </div>
 
-        {/* --- CONTENT CONTAINER --- */}
         <div className="p-4 flex flex-col flex-1">
-          <h3 className="font-semibold text-card-foreground line-clamp-2 mb-2 text-sm group-hover:text-primary transition-colors">
+          <h3
+            className="font-semibold text-card-foreground line-clamp-2 mb-2 text-sm group-hover:text-primary transition-colors cursor-pointer"
+            onClick={handleNavigate}
+          >
             {product.title}
           </h3>
 
-          {/* --- RATING --- */}
           <div
             className="flex items-center gap-2 mb-3"
             aria-label={`Rating: ${product.rating.rate.toFixed(
@@ -238,32 +242,89 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
 
-          {/* --- PRICE DISPLAY (Discounted Price + Original Price) --- */}
+          {/* 💰 PRICE SECTION (Now uses the hook's values) */}
           <div className="mb-4">
-            <div className="flex items-baseline gap-2">
-              {discountPercent > 0 && (
-                <p className="text-sm text-muted-foreground line-through">
-                  {formatPrice(product.price)}
+            {discountPercent > 0 ? (
+              <>
+                <p className="text-primary font-bold text-lg">
+                  {formatPrice(displayPrice)}
                 </p>
-              )}
-              <p className="text-primary font-bold text-xl">
-                {formatPrice(displayPrice)}
+                <div className="flex items-baseline gap-2 text-sm">
+                  <span className="text-gray-500 line-through">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className="text-green-600 font-semibold">
+                    Save {formatPrice(savedAmount)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="text-primary font-bold text-lg">
+                {formatPrice(product.price)}
               </p>
-            </div>
+            )}
           </div>
 
-          {/* --- ACTIONS (Always Visible, pushed to bottom) --- */}
+          {/* --- ACTIONS --- */}
           <div className="flex gap-2 mt-auto">
-            <motion.button
-              onClick={handleAddToCart}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
-              aria-label={`Add ${product.title} to cart`}
-            >
-              <ShoppingCart size={16} />
-              Add
-            </motion.button>
+            {quantity === 0 ? (
+              <motion.button
+                onClick={handleIncrease}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
+                aria-label={`Add ${product.title} to cart`}
+              >
+                <ShoppingCart size={16} />
+                Add
+              </motion.button>
+            ) : (
+              <div className="flex-1 flex items-center justify-between gap-1 px-2 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm">
+                {quantity === 1 ? (
+                  <motion.button
+                    onClick={handleRemove}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="rounded-md hover:bg-primary/70"
+                    aria-label={`Remove ${product.title} from cart`}
+                  >
+                    <Trash2 size={14} />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    onClick={handleDecrease}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="rounded-md hover:bg-primary/70"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus size={14} />
+                  </motion.button>
+                )}
+
+                <motion.span
+                  key={quantity}
+                  initial={{ opacity: 0.5, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.15 }}
+                  className="font-bold text-sm w-6 text-center"
+                  aria-live="polite"
+                >
+                  {quantity}
+                </motion.span>
+
+                <motion.button
+                  onClick={handleIncrease}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="rounded-md hover:bg-primary/70"
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={14} />
+                </motion.button>
+              </div>
+            )}
+
             <motion.button
               onClick={handleBuyNow}
               whileHover={{ scale: 1.05 }}
@@ -272,11 +333,11 @@ export default function ProductCard({ product }: ProductCardProps) {
               aria-label={`Buy ${product.title} now`}
             >
               <Zap size={16} />
-              Buy
+              Buy Now
             </motion.button>
           </div>
         </div>
       </div>
-    </MotionLink>
+    </motion.div>
   );
 }

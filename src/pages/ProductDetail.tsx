@@ -1,84 +1,116 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-// --- UPDATED ---
-// Import both Cart and Wishlist contexts
 import { useCart } from "../context/CartContext";
-import { useWishlist } from "../context/WishlistContext"; // Assuming this is the path
-// ---
-import { Star, ShoppingCart, ArrowLeft, Heart } from "lucide-react";
-import { formatPrice, calculateDiscount } from "../lib/priceUtils";
+import { useWishlist } from "../context/WishlistContext";
+// --- 1. IMPORT useProducts ---
+import { useProducts } from "../context/ProductContext";
+import {
+  Star,
+  ShoppingCart,
+  ArrowLeft,
+  Heart,
+  Minus,
+  Plus,
+} from "lucide-react";
+import { formatPrice } from "../lib/priceUtils";
 import { toast } from "react-toastify";
 import { getProductById } from "../lib/api";
 import type { ApiProduct } from "../lib/api";
+import { useProductDiscount } from "../hooks/useProductDiscount";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const navigate = useNavigate();
 
-  // --- UPDATED ---
-  // Import cart and wishlist functions
+  // --- 2. GET PRODUCTS AND LOADING STATE FROM CONTEXT ---
+  const { products, loading: contextLoading } = useProducts();
+
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const isFavorite = product ? wishlist.includes(product.id) : false;
 
-  // --- UPDATED ---
-  // Favorite state is now derived directly from the wishlist context
-const isFavorite = product
-  ? (wishlist as unknown as ApiProduct[]).some(
-      (item: ApiProduct) => item.id === product.id
-    )
-  : false;
-  // ---
+  // This is correct: it passes the USD price to the hook
+  const { discountPercent, savedAmount, displayPrice } = useProductDiscount(
+    product?.id,
+    product?.price
+  );
 
+  const [isHovering, setIsHovering] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isLaptopView, setIsLaptopView] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLaptopView(window.innerWidth >= 768);
+    };
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  // --- 3. UPDATED FETCH LOGIC ---
   useEffect(() => {
     if (!id) {
       setLoading(false);
       return;
     }
-    const fetchProduct = async () => {
-      try {
-        const data = await getProductById(id);
-        setProduct(data);
-      } catch (error) {
-        console.error("Failed to fetch product:", error);
-      } finally {
-        setLoading(false);
+
+    // Function to handle fetching
+    const loadProduct = async () => {
+      // Wait for the context to finish loading
+      if (!contextLoading) {
+        const productId = Number(id);
+
+        // 1. Try to find the product in context
+        const productFromContext = products.find((p) => p.id === productId);
+
+        if (productFromContext) {
+          // 2. Found it! Set from context.
+          setProduct(productFromContext);
+          setLoading(false);
+        } else {
+          // 3. Not in context (e.g., direct page load), so fetch it.
+          console.warn(
+            `Product ${id} not found in context. Fetching individually.`
+          );
+          try {
+            const data = await getProductById(id);
+            setProduct(data);
+          } catch (error) {
+            console.error("Failed to fetch product:", error);
+          } finally {
+            setLoading(false);
+          }
+        }
       }
     };
 
-    fetchProduct();
-  }, [id]);
+    loadProduct();
+    // This effect now runs when the 'id' changes OR when the context finishes loading
+  }, [id, products, contextLoading]);
 
-  // --- UPDATED: Professional Cart Logic ---
-  const handleAddToCart = () => {
+  // This is correct: it passes USD prices to the cart context
+  const handleAddToCart = useCallback(() => {
     if (product) {
-      const discount = calculateDiscount(product.price);
-
-      // Create a single item object with the correct quantity
-      // This is the standard pattern for e-commerce
-      const itemToAdd = {
+      const itemBase = {
         id: product.id,
         title: product.title,
-        price: product.price,
-        discountedPrice: discount.finalPrice,
-        discountPercent: discount.percent,
+        price: product.price, // Original USD Price
+        discountedPrice: displayPrice, // Discounted USD Price
+        discountPercent: discountPercent,
         image: product.image,
-        quantity: quantity, // Pass the selected quantity
-        // Also pass other useful info
-        category: product.category,
-        rating: product.rating,
       };
 
-      // Pass this single item to your CartContext
-      // NOTE: Your CartContext's addToCart function must be updated to handle this
-      addToCart(itemToAdd);
+      addToCart(itemBase, quantity);
 
       toast.success(
-        // Updated toast to be more descriptive
         `${quantity} x ${product.title.substring(0, 20)}... added to cart!`,
         {
           position: "top-right",
@@ -87,14 +119,13 @@ const isFavorite = product
         }
       );
 
-      setQuantity(1); // Reset quantity after adding
+      setQuantity(1);
+      navigate("/cart");
     }
-  };
+  }, [product, quantity, addToCart, displayPrice, discountPercent, navigate]);
 
-  // --- NEW: Wishlist Handler ---
-  const handleToggleWishlist = () => {
+  const handleToggleWishlist = useCallback(() => {
     if (!product) return;
-
     if (isFavorite) {
       removeFromWishlist(product.id);
       toast.info(
@@ -105,14 +136,60 @@ const isFavorite = product
         }
       );
     } else {
-      // Pass the full product object to the wishlist
-      addToWishlist(product);
+      addToWishlist(product.id);
       toast.success(`${product.title.substring(0, 20)}... added to wishlist!`, {
         position: "top-right",
         autoClose: 2000,
         theme: "colored",
       });
     }
+  }, [product, isFavorite, addToWishlist, removeFromWishlist]);
+
+  const handleMouseEnter = () => {
+    if (isLaptopView) setIsHovering(true);
+  };
+  const handleMouseLeave = () => {
+    if (isLaptopView) setIsHovering(false);
+  };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (imageRef.current && isLaptopView) {
+      const rect = imageRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setMousePosition({ x, y });
+    }
+  };
+
+  const ZOOM_LEVEL = 2.5;
+  const MAGNIFIER_WIDTH = 700;
+  const MAGNIFIER_HEIGHT = 530;
+
+  const getMagnifiedStyle = () => {
+    if (!imageRef.current) return {};
+
+    const imgWidth = imageRef.current.offsetWidth;
+    const imgHeight = imageRef.current.offsetHeight;
+
+    const largeImageWidth = imgWidth * ZOOM_LEVEL;
+    const largeImageHeight = imgHeight * ZOOM_LEVEL;
+
+    const translateX = -mousePosition.x * ZOOM_LEVEL + MAGNIFIER_WIDTH / 2;
+    const translateY = -mousePosition.y * ZOOM_LEVEL + MAGNIFIER_HEIGHT / 2;
+
+    const minTranslateX = -(largeImageWidth - MAGNIFIER_WIDTH);
+    const minTranslateY = -(largeImageHeight - MAGNIFIER_HEIGHT);
+
+    const clampedTranslateX = Math.max(minTranslateX, Math.min(0, translateX));
+    const clampedTranslateY = Math.max(minTranslateY, Math.min(0, translateY));
+
+    return {
+      width: `${MAGNIFIER_WIDTH}px`,
+      height: `${MAGNIFIER_HEIGHT}px`,
+      backgroundImage: `url(${product?.image || "/placeholder.svg"})`,
+      backgroundSize: `${largeImageWidth}px ${largeImageHeight}px`,
+      backgroundPosition: `${clampedTranslateX}px ${clampedTranslateY}px`,
+      backgroundRepeat: "no-repeat",
+    };
   };
 
   if (loading) {
@@ -147,8 +224,6 @@ const isFavorite = product
     );
   }
 
-  const discount = calculateDiscount(product.price);
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -166,26 +241,38 @@ const isFavorite = product
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image Panel */}
-          <motion.div
-            // --- UPDATED ---
-            // Using aspect-square is cleaner and more responsive than h-96
-            className="flex items-center justify-center bg-card border border-border rounded-xl p-8 aspect-square"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <img
-              src={product.image || "/placeholder.svg"}
-              alt={product.title}
-              className="w-full h-full object-contain"
-            />
-          </motion.div>
+          <div className="relative">
+            <motion.div
+              className="flex items-center justify-center bg-card border border-border rounded-xl p-8 aspect-square"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <img
+                ref={imageRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onMouseMove={handleMouseMove}
+                src={product.image || "/placeholder.svg"}
+                alt={product.title}
+                className="w-full h-full object-contain cursor-zoom-in"
+              />
+            </motion.div>
+
+            {isHovering && isLaptopView && (
+              <motion.div
+                className="absolute left-full top-0 ml-4 bg-white border border-border rounded-xl pointer-events-none z-10 hidden md:block"
+                style={getMagnifiedStyle()}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              />
+            )}
+          </div>
 
           {/* Details Panel */}
           <motion.div
-            // --- UPDATED ---
-            // Removed justify-between to let content flow, will push actions down
             className="flex flex-col"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -203,12 +290,10 @@ const isFavorite = product
                   </h1>
                 </div>
 
-                {/* --- UPDATED: Wishlist Button --- */}
                 <motion.button
                   onClick={handleToggleWishlist}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  // Using a more premium, subtle style for the "on" state
                   className={`p-3 rounded-lg transition-colors ${
                     isFavorite
                       ? "bg-accent/20 text-accent"
@@ -225,7 +310,6 @@ const isFavorite = product
                 </motion.button>
               </div>
 
-              {/* Rating */}
               <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
@@ -250,52 +334,54 @@ const isFavorite = product
                 </span>
               </div>
 
-              {/* Price */}
+              {/* Price Section is correct: formatPrice converts USD to INR */}
               <motion.div
                 className="mb-6 bg-muted/50 p-4 rounded-lg"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <div className="flex items-baseline gap-3 mb-2">
-                  <p className="text-sm text-muted-foreground line-through">
+                {discountPercent > 0 ? (
+                  <>
+                    <div className="flex items-baseline gap-3 mb-2">
+                      <p className="text-sm text-muted-foreground line-through">
+                        {formatPrice(product.price)}
+                      </p>
+                      <span className="bg-accent text-accent-foreground text-sm font-bold px-2 py-1 rounded">
+                        -{discountPercent}%
+                      </span>
+                    </div>
+                    <p className="text-4xl font-bold text-primary mb-2">
+                      {formatPrice(displayPrice)}
+                    </p>
+                    <p className="text-sm text-accent font-semibold">
+                      You save {formatPrice(savedAmount)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-4xl font-bold text-primary mb-2">
                     {formatPrice(product.price)}
                   </p>
-                  <span className="bg-accent text-accent-foreground text-sm font-bold px-2 py-1 rounded">
-                    -{discount.percent}%
-                  </span>
-                </div>
-                <p className="text-4xl font-bold text-primary mb-2">
-                  {formatPrice(discount.finalPrice)}
-                </p>
-                <p className="text-sm text-accent font-semibold">
-                  You save {formatPrice(discount.amount)}
-                </p>
+                )}
               </motion.div>
 
-              {/* Description */}
               <div className="mb-8">
                 <h2 className="text-lg font-semibold text-foreground mb-3">
                   Description
                 </h2>
-                {/* --- UPDATED: Fixed HTML tag --- */}
                 <p className="text-muted-foreground leading-relaxed">
                   {product.description}
                 </p>
               </div>
             </div>
 
-            {/* Bottom Section (Actions) */}
             <motion.div
-              // --- UPDATED ---
-              // mt-auto pushes this block to the bottom of the flex column
               className="space-y-4 mt-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
               <div className="flex items-center gap-4">
-                {/* --- UPDATED: Quantity Selector --- */}
                 <div className="flex items-center border border-border rounded-lg">
                   <motion.button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -303,7 +389,7 @@ const isFavorite = product
                     className="px-4 py-2 hover:bg-muted transition-colors rounded-l-lg"
                     aria-label="Decrease quantity"
                   >
-                    -
+                    <Minus size={16} />
                   </motion.button>
                   <span className="px-6 py-2 font-semibold" aria-live="polite">
                     {quantity}
@@ -314,13 +400,12 @@ const isFavorite = product
                     className="px-4 py-2 hover:bg-muted transition-colors rounded-r-lg"
                     aria-label="Increase quantity"
                   >
-                    +
+                    <Plus size={16} />
                   </motion.button>
                 </div>
                 <span className="text-sm text-muted-foreground">In Stock</span>
               </div>
 
-              {/* Add to Cart Button */}
               <motion.button
                 onClick={handleAddToCart}
                 whileHover={{ scale: 1.02 }}

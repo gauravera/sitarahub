@@ -4,36 +4,15 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import ProductCard from "../components/ProductCard";
 import FilterSidebar from "../components/FilterSidebar";
-import SearchBar from "../components/SearchBar";
 import SortDropdown from "../components/SortDropdown";
 import { useProducts } from "../context/ProductContext";
-import { Sparkles, Filter } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function Home() {
   const { filteredProducts, loading, error } = useProducts();
   const [filterOpen, setFilterOpen] = useState(false);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
 
   // Show toast if there is an error
   useEffect(() => {
@@ -84,16 +63,6 @@ export default function Home() {
             you're looking for.
           </p>
         </motion.div>
-
-        {/* Search Bar */}
-        <motion.div
-          className="mb-8 max-w-2xl mx-auto"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <SearchBar />
-        </motion.div>
       </div>
 
       {/* Main Content */}
@@ -102,24 +71,17 @@ export default function Home() {
           {/* Desktop Sidebar */}
           <div className="hidden md:block md:w-64 flex-shrink-0">
             <div className="sticky top-24">
-              <FilterSidebar isOpen={true} onClose={() => {}} />
+              <FilterSidebar
+                isOpen={true}
+                onClose={() => {}}
+                onOpen={() => {}}
+              />{" "}
             </div>
           </div>
 
           {/* Products Section */}
           <div className="flex-1 min-w-0">
-            {/* Mobile Filter Button */}
-            <div className="mb-6 md:hidden">
-              <motion.button
-                onClick={() => setFilterOpen(true)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium w-full justify-center"
-              >
-                <Filter size={18} />
-                Open Filters
-              </motion.button>
-            </div>
+            {/* --- Mobile Filter Button REMOVED --- */}
 
             {/* Filter Modal Overlay */}
             {filterOpen && (

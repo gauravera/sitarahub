@@ -1,19 +1,15 @@
-export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat("en-US", {
+// Define the conversion rate
+const USD_TO_INR_RATE = 87.9;
+
+export const formatPrice = (usdPrice: number): string => {
+  // 1. Convert the USD price to INR
+  const inrPrice = usdPrice * USD_TO_INR_RATE;
+
+  // 2. Format the new INR price
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(price);
-};
-
-export const calculateDiscount = (
-  originalPrice: number
-): { percent: number; amount: number; finalPrice: number } => {
-  // Generate discount between 5-30% based on price
-  const discountPercent = Math.min(5 + Math.floor(originalPrice / 100), 30);
-  const discountAmount = Math.round((originalPrice * discountPercent) / 100);
-  const finalPrice = originalPrice - discountAmount;
-
-  return { percent: discountPercent, amount: discountAmount, finalPrice };
+  }).format(inrPrice);
 };

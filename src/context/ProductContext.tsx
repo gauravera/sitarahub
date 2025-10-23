@@ -1,42 +1,56 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-// --- MODIFIED ---
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+} from "react";
 import type { ApiProduct } from "../lib/api";
 import { getProducts } from "../lib/api";
 
-// --- NEW (Recommended) ---
-// This is the local type for your context.
-// It allows for the 'discountedPrice' you use in your filter logic.
+// Local type extending ApiProduct
 type Product = ApiProduct & {
   discountedPrice?: number;
 };
 
-// --- NEW (Recommended) ---
-// Define a type for our context's value for full type safety
+interface Filters {
+  searchQuery: string;
+  selectedCategory: string; // Sidebar category
+  priceRange: { min: number; max: number };
+  sortOption: string;
+  selectedSearchCategory: string; // Search bar category
+}
+
 interface ProductContextType {
   products: Product[];
   filteredProducts: Product[];
-  categories: string[]; // <-- MODIFICATION: Added categories list
+  categories: string[];
   loading: boolean;
-  filters: typeof initialFilters;
+  filters: Filters;
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (category: string) => void;
   setPriceRange: (min: number, max: number) => void;
   setSortOption: (option: string) => void;
+  setSelectedSearchCategory: (category: string) => void;
   resetFilters: () => void;
 }
 
-// --- MODIFIED ---
-// Create the context with the new type (or null for default)
 const ProductContext = createContext<ProductContextType | null>(null);
 
-// Store initial filter state to make resetting easier
-const initialFilters = {
+// --- 1. DEFINE CONSTANTS IN USD ---
+// This now matches the MAX_PRICE_USD in FilterSidebar
+const MAX_PRICE_USD = 1000;
+// We no longer need USD_TO_INR_RATE or MAX_PRICE_INR here.
+
+const initialFilters: Filters = {
   searchQuery: "",
   selectedCategory: "",
-  priceRange: { min: 0, max: 1000 },
+  // The filter range is now in USD
+  priceRange: { min: 0, max: MAX_PRICE_USD },
   sortOption: "",
+  selectedSearchCategory: "All", // Default search category
 };
 
 export const ProductProvider = ({
@@ -44,34 +58,33 @@ export const ProductProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  // --- MODIFIED ---
-  // Use our new 'Product' type instead of 'any[]'
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]); // <-- MODIFICATION: Added categories state
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [filters, setFilters] = useState(initialFilters);
 
-  // Fetch all products
+  // Fetch products and categories
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // --- MODIFIED ---
-        // Use the new, clean API function!
+        setLoading(true);
+        // data contains products with prices in USD
         const data = await getProducts();
-        setProducts(data);
-        setFilteredProducts(data);
 
-        // --- MODIFICATION: Extract and set unique categories ---
+        // --- KEY FIX: REMOVED INR CONVERSION ---
+        // We store the original USD-priced products directly in state.
+        // All filtering and logic will be done in USD.
+        setProducts(data);
+        // --- END OF FIX ---
+
+        // Extract unique categories
         const uniqueCategories = [
+          "All",
           ...new Set(data.map((p: ApiProduct) => p.category)),
         ];
         setCategories(uniqueCategories);
-        // --- End Modification ---
       } catch (err) {
-        // The API file already logged the error, but we can log this too.
-        console.error("Error setting products in context:", err);
+        console.error("Error fetching products in context:", err);
       } finally {
         setLoading(false);
       }
@@ -79,70 +92,62 @@ export const ProductProvider = ({
     fetchProducts();
   }, []);
 
-  // Apply filters + sorting (This effect remains the same, which is great!)
-  useEffect(() => {
-    // --- START OF DEBUG LOGS ---
-    console.groupCollapsed(`[ProductContext] Filtering Effect Triggered`);
-    console.log("Timestamp:", new Date().toLocaleTimeString());
-    console.log("Current Filters:", filters);
-    console.log(`Master product list size: ${products.length}`);
-    // --- END OF DEBUG LOGS ---
+  // Filter and sort products
+  const filteredProducts = useMemo(() => {
+    const tempProducts = products.filter((p) => {
+      // 'p.price' is now the original USD price
+      const price = p.price;
+      // 'filters.priceRange' is now also in USD
+      const { min, max } = filters.priceRange;
 
-    if (products.length === 0) {
-      console.log("Master list is empty, skipping filter.");
-      console.groupEnd();
-      return;
-    }
+      const searchMatch =
+        !filters.searchQuery ||
+        p.title.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+        p.description.toLowerCase().includes(filters.searchQuery.toLowerCase());
 
-    const filtered = products.filter((p) => {
-      // Your existing logic works perfectly with the new types
-      const price = p.discountedPrice ?? p.price;
+      const sidebarCategoryMatch =
+        !filters.selectedCategory ||
+        p.category.toLowerCase() === filters.selectedCategory.toLowerCase();
+
+      // --- Price Overlap Fix (Now correctly uses USD) ---
+      // This checks if the filter is "Over $350" (or "Over ₹...")
+      const isLastRange = max === MAX_PRICE_USD;
+
+      // This logic now correctly compares USD (price) with USD (min, max)
+      const priceMatch =
+        price >= min && (isLastRange ? price <= max : price < max);
+      // --- End of Price Overlap Fix ---
+
+      const searchCategoryMatch =
+        filters.selectedSearchCategory === "All" ||
+        p.category.toLowerCase() ===
+          filters.selectedSearchCategory.toLowerCase();
 
       return (
-        (filters.searchQuery
-          ? p.title.toLowerCase().includes(filters.searchQuery.toLowerCase())
-          : true) &&
-        (filters.selectedCategory && filters.selectedCategory !== ""
-          ? p.category.toLowerCase() === filters.selectedCategory.toLowerCase()
-          : true) &&
-        price >= filters.priceRange.min &&
-        price <= filters.priceRange.max
+        searchMatch && sidebarCategoryMatch && priceMatch && searchCategoryMatch
       );
     });
 
-    // ... (sorting logic remains the same)
-    const sortedProducts = [...filtered];
+    // --- Sorting Logic (This works perfectly with USD prices) ---
+    const sorted = [...tempProducts];
     switch (filters.sortOption) {
       case "price-low":
-        sortedProducts.sort(
-          (a, b) =>
-            (a.discountedPrice ?? a.price) - (b.discountedPrice ?? b.price)
-        );
+        sorted.sort((a, b) => a.price - b.price);
         break;
       case "price-high":
-        sortedProducts.sort(
-          (a, b) =>
-            (b.discountedPrice ?? b.price) - (a.discountedPrice ?? a.price)
-        );
+        sorted.sort((a, b) => b.price - b.price);
         break;
       case "rating":
-        sortedProducts.sort((a, b) => b.rating.rate - a.rating.rate);
+        sorted.sort((a, b) => b.rating.rate - a.rating.rate);
         break;
       case "newest":
-        sortedProducts.sort((a, b) => b.id - a.id);
+        sorted.sort((a, b) => b.id - a.id);
         break;
     }
-
-    // --- START OF DEBUG LOGS ---
-    console.log(`Filtered list size (pre-sort): ${filtered.length}`);
-    console.log(`Sorted list size (post-sort): ${sortedProducts.length}`);
-    console.groupEnd();
-    // --- END OF DEBUG LOGS ---
-
-    setFilteredProducts(sortedProducts);
+    return sorted;
   }, [products, filters]);
 
-  // Exposed helper functions (These are perfect, no changes needed)
+  // --- Filter Setter Functions (These receive USD values from the sidebar) ---
   const setSearchQuery = (query: string) =>
     setFilters((prev) => ({ ...prev, searchQuery: query }));
 
@@ -155,20 +160,24 @@ export const ProductProvider = ({
   const setSortOption = (option: string) =>
     setFilters((prev) => ({ ...prev, sortOption: option }));
 
-  const resetFilters = () => setFilters(initialFilters); // Use the constant
+  const setSelectedSearchCategory = (category: string) =>
+    setFilters((prev) => ({ ...prev, selectedSearchCategory: category }));
+
+  const resetFilters = () => setFilters(initialFilters);
 
   return (
     <ProductContext.Provider
       value={{
         products,
         filteredProducts,
-        categories, // <-- MODIFICATION: Pass categories to consumers
+        categories,
         loading,
         filters,
         setSearchQuery,
         setSelectedCategory,
         setPriceRange,
         setSortOption,
+        setSelectedSearchCategory,
         resetFilters,
       }}
     >
@@ -177,16 +186,11 @@ export const ProductProvider = ({
   );
 };
 
-// --- MODIFIED ---
-// This makes your hook fully type-safe and easier to use
-
-// eslint-disable-next-line react-refresh/only-export-components
+//eslint-disable-next-line react-refresh/only-export-components
 export const useProducts = () => {
   const context = useContext(ProductContext);
-
   if (context === null) {
     throw new Error("useProducts() must be used within a <ProductProvider>");
   }
-
   return context;
 };
