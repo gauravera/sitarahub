@@ -1,83 +1,85 @@
-<h1 align="center">Welcome to sitarahub 👋</h1>
-<p>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.0.0-blue.svg?cacheSeconds=2592000" />
-</p>
+# 🛍️ Modern E-Commerce Store (React, TypeScript, Context API)
 
-> This is a modern, feature-rich e-commerce application built with React, TypeScript, and the Context API. It uses the Fakestore API for product data and includes a complete shopping experience, from product browsing to checkout.✨ FeaturesProduct Catalog: Browse products fetched from a live API (fakestoreapi.com).Advanced Filtering & Sorting:Filter products by category.Filter products by price range.Sort products by price (low-to-high, high-to-low), rating, or newest.Search products by title and description.Product Details: View a dedicated page for each product with a description, ratings, and an image magnifier/zoom-on-hover feature.Shopping Cart:Add/remove items from the cart.Update item quantities.View a real-time order summary.Wishlist:Add/remove items from a persistent wishlist.Move items from the wishlist directly to the cart.Checkout Process:A multi-step checkout form for shipping and payment information.Real-time form validation.PIN Code Auto-fill: Automatically fetches City and State from a 6-digit Indian PIN code using the api.postalpincode.in API.User Authentication: Includes a demo login page.Responsive Design: Built to be mobile-friendly.Smooth Animations: Uses framer-motion for page transitions and UI animations.Notifications: Uses react-toastify for user feedback (e.g., &#34;Item added to cart&#34;).🛠️ Tech StackCore: React, TypeScript, React Router DOMState Management: React Context API (for Products, Cart, and Wishlist)Styling: Tailwind CSS (inferred from class names like bg-primary, min-h-screen)Animations: Framer MotionIcons: Lucide ReactNotifications: React ToastifyAPI & Data:Fakestore API (for product data)Postal PIN Code API (for checkout form)Axios (for API requests)📁 Project StructureHere's a brief overview of the key files and their purpose:/src | |-- /components | |-- FilterSidebar.tsx | |-- Footer.tsx | |-- Header.tsx | |-- Layout.tsx | |-- ProductCard.tsx | |-- ScrollToTop.tsx | |-- SearchBar.tsx | |-- SortDropdown.tsx | |-- /context | |-- ProductContext.tsx # Manages all product data, filtering, and sorting logic. 
+This is a **modern, feature-rich e-commerce application** built with **React**, **TypeScript**, and the **Context API**. It provides a complete, smooth shopping experience, from product browsing to a multi-step checkout.
 
-### ✨ [Demo](http://localhost:5173)
+The application leverages external APIs like the **Fakestore API** for product data and the **Postal PIN Code API** for a smart checkout experience.
 
-## Install
+---
 
-```sh
-npm install
-```
+## ✨ Features
 
-## Usage
+### 🛒 Core Shopping Experience
+* **Product Catalog**: Browse products fetched from a live API (`fakestoreapi.com`).
+* **Product Details**: Dedicated page for each product with a description, ratings, and an **image magnifier/zoom-on-hover** feature.
+* **Shopping Cart**: Add/remove items, update quantities, and view a real-time order summary.
+* **Wishlist**: Persistent storage for favorite items with the ability to move them directly to the cart.
 
-```sh
+### ⚙️ Advanced Functionality
+* **Advanced Filtering & Sorting**:
+    * Filter products by **category** and **price range**.
+    * Sort products by **price** (low-to-high, high-to-low), **rating**, or **newest** arrival.
+    * Search products by title and description.
+* **Checkout Process**:
+    * A multi-step form for shipping and payment information with **real-time validation**.
+    * **PIN Code Auto-fill**: Automatically fetches City and State from a 6-digit Indian PIN code using the `api.postalpincode.in` API.
+* **User Authentication**: Includes a demo login page.
+
+### 🎨 UI & User Experience
+* **Responsive Design**: Built to be mobile-friendly.
+* **Smooth Animations**: Uses **Framer Motion** for page transitions and engaging UI animations.
+* **Notifications**: Uses `react-toastify` for clear user feedback (e.g., "Item added to cart").
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Core** | React, TypeScript, React Router DOM | Frontend Framework & Type Safety |
+| **State Management** | React Context API | Centralized state for Products, Cart, and Wishlist |
+| **Styling** | **Tailwind CSS** | Utility-first CSS framework for rapid styling |
+| **Animations** | Framer Motion | Smooth and declarative UI animations |
+| **Notifications** | React Toastify | Non-blocking user alerts |
+| **API & Data** | Axios, Fakestore API, Postal PIN Code API | HTTP client and external data sources |
+| **Icons** | Lucide React | Modern and accessible icon set |
+
+---
+
+## 🚀 Getting Started
+
+To get a local copy of the project up and running, follow these simple steps.
+
+### Prerequisites
+
+* **Node.js** (v16 or later)
+* **npm** or **yarn**
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone [[https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)]
+    ```
+2.  Navigate to the project directory:
+    ```bash
+    cd your-repo-name
+    ```
+3.  Install dependencies:
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+### Running the App
+
+Start the development server:
+
+```bash
 npm run dev
-```
-
-## Author
-
-👤 **Gaurav Rai**
-
-* Website: https://gauravrai.vercel.app
-* Github: [@gauravera](https://github.com/gauravera)
-* LinkedIn: [@https:\/\/www.linkedin.com\/in\/gauravrai3133](https://linkedin.com/in/https:\/\/www.linkedin.com\/in\/gauravrai3133)
-
-## Show your support
-
-Give a ⭐️ if this project helped you!
-
-***
-_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
-=======
-React E-Commerce Store
-
-This is a modern, feature-rich e-commerce application built with React, TypeScript, and the Context API. It uses the Fakestore API for product data and includes a complete shopping experience, from product browsing to checkout.✨ FeaturesProduct Catalog: Browse products fetched from a live API (fakestoreapi.com).Advanced Filtering & Sorting:Filter products by category.Filter products by price range.Sort products by price (low-to-high, high-to-low), rating, or newest.Search products by title and description.Product Details: View a dedicated page for each product with a description, ratings, and an image magnifier/zoom-on-hover feature.Shopping Cart:Add/remove items from the cart.Update item quantities.View a real-time order summary.Wishlist:Add/remove items from a persistent wishlist.Move items from the wishlist directly to the cart.Checkout Process:A multi-step checkout form for shipping and payment information.Real-time form validation.PIN Code Auto-fill: Automatically fetches City and State from a 6-digit Indian PIN code using the api.postalpincode.in API.User Authentication: Includes a demo login page.Responsive Design: Built to be mobile-friendly.Smooth Animations: Uses framer-motion for page transitions and UI animations.Notifications: Uses react-toastify for user feedback (e.g., "Item added to cart").🛠️ Tech StackCore: React, TypeScript, React Router DOMState Management: React Context API (for Products, Cart, and Wishlist)Styling: Tailwind CSS (inferred from class names like bg-primary, min-h-screen)Animations: Framer MotionIcons: Lucide ReactNotifications: React ToastifyAPI & Data:Fakestore API (for product data)Postal PIN Code API (for checkout form)Axios (for API requests)📁 Project StructureHere's a brief overview of the key files and their purpose:/src
-|
-|-- /components
-|   |-- FilterSidebar.tsx
-|   |-- Footer.tsx
-|   |-- Header.tsx
-|   |-- Layout.tsx
-|   |-- ProductCard.tsx
-|   |-- ScrollToTop.tsx
-|   |-- SearchBar.tsx
-|   |-- SortDropdown.tsx
-|
-|-- /context
-|   |-- ProductContext.tsx  # Manages all product data, filtering, and sorting logic.
-|   |-- CartContext.tsx     # Manages all shopping cart state and actions.
-|   |-- WishlistContext.tsx # Manages all wishlist state and actions.
-|
-|-- /hooks
-
-|-- /lib (or /utils)
-|   |-- api.ts              # Handles all external API calls (Fakestore, Postal PIN).
-|   |-- priceUtils.ts       # (Inferred) Utility functions for formatting currency.
-
-|-- /pages
-|   |-- Home.tsx            # Main product listing page with filters.
-|   |-- ProductDetail.tsx   # Detailed view for a single product.
-|   |-- Cart.tsx            # Shopping cart page.
-|   |-- Wishlist.tsx        # Wishlist page.
-|   |-- Checkout.tsx        # Checkout form page.
-|   |-- Login.tsx           # Demo login page.
-|
--- App.tsx                 # Main app component, sets up routes and providers.
-
-🚀 Getting Started
-To get a local copy up and running, follow these simple steps.PrerequisitesNode.js (v16 or later)npm or yarnInstallationClone the repository:git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-
-Navigate to the project directory:cd your-repo-name
-Install dependencies:npm install
-# or
-yarn install
-Running the AppStart the development server:npm run dev
 # or
 yarn dev
-Open http://localhost:5173 (or your specified port) in your browser to see the application.
+```
+
+Open http://localhost:5173 (or your specified port) in your browser to view the application.
 
