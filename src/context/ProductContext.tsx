@@ -28,6 +28,8 @@ interface ProductContextType {
   filteredProducts: Product[];
   categories: string[];
   loading: boolean;
+  // --- 1. ADD ERROR TO TYPE ---
+  error: string | null;
   filters: Filters;
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (category: string) => void;
@@ -62,12 +64,15 @@ export const ProductProvider = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(initialFilters);
+  // --- 2. ADD ERROR STATE ---
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch products and categories
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
+        setError(null); // Clear previous errors
         // data contains products with prices in USD
         const data = await getProducts();
 
@@ -85,6 +90,10 @@ export const ProductProvider = ({
         setCategories(uniqueCategories);
       } catch (err) {
         console.error("Error fetching products in context:", err);
+        // --- 3. SET ERROR STATE ON CATCH ---
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
       } finally {
         setLoading(false);
       }
@@ -135,7 +144,7 @@ export const ProductProvider = ({
         sorted.sort((a, b) => a.price - b.price);
         break;
       case "price-high":
-        sorted.sort((a, b) => b.price - b.price);
+        sorted.sort((a, b) => b.price - a.price);
         break;
       case "rating":
         sorted.sort((a, b) => b.rating.rate - a.rating.rate);
@@ -172,6 +181,8 @@ export const ProductProvider = ({
         filteredProducts,
         categories,
         loading,
+        // --- 4. PROVIDE ERROR STATE ---
+        error,
         filters,
         setSearchQuery,
         setSelectedCategory,

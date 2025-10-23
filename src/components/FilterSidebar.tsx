@@ -2,7 +2,7 @@
 
 // --- 2. IMPORT SlidersHorizontal (ChevronDown removed) ---
 import { X, RotateCcw, SlidersHorizontal } from "lucide-react";
-import { useEffect,  } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProducts } from "../context/ProductContext";
 import { formatPrice } from "../lib/priceUtils";
@@ -10,9 +10,8 @@ import { formatPrice } from "../lib/priceUtils";
 interface FilterSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  // --- 1. ADD onOpen PROP ---
-  // This is needed for the new "Filters" button in the mobile bar
-  onOpen: () => void;
+  // --- 1. Made onOpen optional ---
+  onOpen?: () => void;
 }
 
 export default function FilterSidebar({
@@ -60,12 +59,6 @@ export default function FilterSidebar({
       x: 0,
       transition: { delay: i * 0.05 },
     }),
-  } as const;
-
-  const dropdownVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: -10 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.15 } },
-    exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.1 } },
   } as const;
 
   const isFilterActive =
@@ -133,7 +126,8 @@ export default function FilterSidebar({
 
           {/* --- NEW "Open Filters" Button --- */}
           <motion.button
-            onClick={onOpen}
+            // --- 2. Added check before calling onOpen ---
+            onClick={onOpen ? onOpen : undefined}
             whileTap={{ scale: 0.96 }}
             className="flex-1 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition bg-muted hover:bg-muted/80 text-foreground"
           >

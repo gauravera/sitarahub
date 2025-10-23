@@ -74,7 +74,7 @@ export default function Home() {
               <FilterSidebar
                 isOpen={true}
                 onClose={() => {}}
-                onOpen={() => {}}
+                // --- onOpen REMOVED (Not needed for desktop) ---
               />{" "}
             </div>
           </div>
@@ -98,6 +98,8 @@ export default function Home() {
               <FilterSidebar
                 isOpen={filterOpen}
                 onClose={() => setFilterOpen(false)}
+                // --- onOpen ADDED (This fixes the error) ---
+                onOpen={() => setFilterOpen(true)}
               />
             </div>
 

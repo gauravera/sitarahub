@@ -15,7 +15,7 @@ import {
   Home,
   Tag,
   Store,
-  Loader2, // --- ADDED: For modal loading spinner ---
+  Loader2,
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -428,23 +428,9 @@ export default function Header() {
                 Account & Lists <ChevronDown size={16} />
               </div>
             </Link>
-            <Link
-              to="/wishlist"
-              className="p-2 relative rounded-lg hover:bg-muted transition-colors"
-            >
-              <div className="text-xs text-muted-foreground">Your</div>
-              <div className="text-sm font-bold text-foreground">Wishlist</div>
-              {wishlist.length > 0 && (
-                <motion.span
-                  className="absolute -top-1 right-1 bg-primary text-primary-foreground text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
-                  variants={badgeVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {wishlist.length}
-                </motion.span>
-              )}
-            </Link>
+
+            {/* --- WISHLIST LINK REMOVED FROM HERE --- */}
+
             <Link
               to="/cart"
               className="flex items-end gap-1 p-2 relative rounded-lg hover:bg-muted transition-colors"
@@ -475,6 +461,26 @@ export default function Header() {
               <Menu size={20} />
               All
             </button>
+
+            {/* --- WISHLIST LINK ADDED HERE --- */}
+            <Link
+              to="/wishlist"
+              className="p-2 rounded-md hover:bg-border transition-colors relative"
+            >
+              Wishlist
+              {wishlist.length > 0 && (
+                <motion.span
+                  className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                  variants={badgeVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {wishlist.length}
+                </motion.span>
+              )}
+            </Link>
+            {/* --- END OF ADDED LINK --- */}
+
             <Link
               to="/category/deals"
               className="p-2 rounded-md hover:bg-border transition-colors"
