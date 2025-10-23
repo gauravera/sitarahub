@@ -16,6 +16,9 @@ import {
   Tag,
   Store,
   Loader2,
+  // --- ADDED Icons ---
+  Gift,
+  Headset, // Or LifeBuoy if you prefer
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -327,8 +330,8 @@ function PincodeModal({
 export default function Header() {
   const { cart } = useCart();
   const { wishlist } = useWishlist();
-  // Using context for sidebar category reset, search bar uses its own logic now
-  const { setSelectedCategory } = useProducts();
+  // --- 1. GET CATEGORIES FROM CONTEXT ---
+  const { setSelectedCategory, categories } = useProducts();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -646,6 +649,28 @@ export default function Header() {
                 <h3 className="font-bold text-lg px-3 pt-4 pb-2">
                   Shop By Category
                 </h3>
+
+                {/* --- Dynamic Category List --- */}
+                {categories
+                  .filter((cat) => cat !== "All") // Exclude "All"
+                  .map((cat) => (
+                    <Link
+                      key={cat}
+                      to="/" // Navigate to home to show filtered results
+                      className={linkStyles}
+                      onClick={() => {
+                        setSelectedCategory(cat); // Set the category in context
+                        setMobileMenuOpen(false); // Close the menu
+                      }}
+                    >
+                      {/* Using a generic icon, replace if you have specific ones */}
+                      <Tag size={20} />{" "}
+                      <span className="text-sm capitalize">{cat}</span>
+                    </Link>
+                  ))}
+                {/* --- End of Dynamic List --- */}
+
+                {/* --- Static Links --- */}
                 <Link
                   to="/category/deals"
                   className={linkStyles}
@@ -654,12 +679,30 @@ export default function Header() {
                   <Tag size={20} /> <span className="text-sm">Deals</span>
                 </Link>
                 <Link
-                  to="/sell"
+                  to="/sell" // Assuming '/sell' is the correct path
                   className={linkStyles}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Store size={20} /> <span className="text-sm">Sell</span>
                 </Link>
+                {/* --- ADDED ICONS for Gift Cards & Customer Service --- */}
+                <Link
+                  to="/gift-cards" // Assuming '/gift-cards' is the correct path
+                  className={linkStyles}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Gift size={20} /> <span className="text-sm">Gift Cards</span>
+                </Link>
+                <Link
+                  to="/customer-service" // Assuming '/customer-service' is the correct path
+                  className={linkStyles}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Headset size={20} />{" "}
+                  <span className="text-sm">Customer Service</span>
+                </Link>
+                {/* --- End of Static Links --- */}
+
                 <hr className="my-2 border-border" />
                 <Link
                   to="/login"

@@ -1,10 +1,9 @@
-// src/components/Checkout.tsx (or wherever your Checkout component resides)
-
 "use client";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+// --- 1. IMPORT finalTotal ---
 import { useCart } from "../context/CartContext";
 import {
   ArrowLeft,
@@ -20,16 +19,15 @@ import {
   Lock,
   Package,
   CalendarDays,
-  DollarSign
+  DollarSign,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getPincodeDetails } from "../lib/api";
+import { formatPrice } from "../lib/priceUtils";
+import logo from "../assets/Sitarahub.avif";
 
-// Assuming you've saved your logo as 'logo.png' in the 'public' directory
-import logo from "../assets/Sitarahub.avif"; // <-- Updated to your PNG logo
-
-// Helper component for cleaner, icon-based inputs (remains unchanged)
+// FormInput component (remains unchanged)
 const FormInput = ({
   name,
   value,
@@ -74,12 +72,10 @@ const FormInput = ({
         disabled={disabled}
         placeholder={placeholder}
         className={`w-full rounded-lg border bg-muted py-3 pl-10 pr-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-          error
-            ? "border-red-500 focus:ring-red-500/50"
-            : "border-border"
+          error ? "border-red-500 focus:ring-red-500/50" : "border-border"
         }`}
       />
-      {name === "zipCode" && disabled && ( // Show loader specifically for zip code
+      {name === "zipCode" && disabled && (
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
@@ -98,14 +94,13 @@ const FormInput = ({
   </div>
 );
 
-
-// --- NEW COMPONENT: OrderConfirmation ---
+// OrderConfirmation component (remains unchanged, formatting applied)
 interface OrderConfirmationProps {
   firstName: string;
   email: string;
   orderId: string;
   estimatedDelivery: string;
-  totalAmount: number;
+  totalAmount: number; // Keep receiving USD
 }
 
 const OrderConfirmation = ({
@@ -113,7 +108,7 @@ const OrderConfirmation = ({
   email,
   orderId,
   estimatedDelivery,
-  totalAmount,
+  totalAmount, // Still USD
 }: OrderConfirmationProps) => {
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
@@ -123,27 +118,27 @@ const OrderConfirmation = ({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        {/* Logo - Using your provided image */}
         <motion.img
           src={logo}
           alt="YourShop Logo"
-          className="mx-auto h-20 mb-6 object-contain" // Increased height, object-contain for aspect ratio
+          className="mx-auto h-20 mb-6 object-contain"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         />
-
-        {/* Confirmed Checkmark Animation */}
         <motion.div
-          className="w-24 h-24 bg-[#00A99D] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg" // Adjusted color to match logo teal
+          className="w-24 h-24 bg-[#00A99D] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
           initial={{ scale: 0, rotate: 180 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.3 }}
+          transition={{
+            type: "spring",
+            stiffness: 200,
+            damping: 15,
+            delay: 0.3,
+          }}
         >
           <Check size={50} className="text-white" />
         </motion.div>
-
-        {/* Personalized Message */}
         <motion.h1
           className="text-4xl font-extrabold text-foreground mb-4 leading-tight"
           initial={{ opacity: 0, y: 20 }}
@@ -158,11 +153,10 @@ const OrderConfirmation = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.4 }}
         >
-          Thank you for your purchase, <span className="text-[#00A99D] font-semibold">{firstName}</span>! {/* Adjusted color */}
+          Thank you for your purchase,{" "}
+          <span className="text-[#00A99D] font-semibold">{firstName}</span>!
           Your order has been successfully placed.
         </motion.p>
-
-        {/* Order Details Card */}
         <motion.div
           className="bg-muted p-6 rounded-lg border border-border text-left space-y-3 mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -185,14 +179,15 @@ const OrderConfirmation = ({
             <span className="flex items-center gap-2 text-muted-foreground">
               <DollarSign size={20} /> Total Amount:
             </span>
-            <span className="text-xl font-bold text-[#00A99D]">${totalAmount.toFixed(2)}</span> {/* Adjusted color */}
+            <span className="text-xl font-bold text-[#00A99D]">
+              {formatPrice(totalAmount)}
+            </span>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
-            A detailed confirmation email has been sent to <span className="font-medium text-foreground">{email}</span>.
+            A detailed confirmation email has been sent to{" "}
+            <span className="font-medium text-foreground">{email}</span>.
           </p>
         </motion.div>
-
-        {/* Call to action buttons */}
         <motion.div
           className="flex flex-col sm:flex-row justify-center gap-4"
           initial={{ opacity: 0, y: 20 }}
@@ -200,14 +195,14 @@ const OrderConfirmation = ({
           transition={{ delay: 0.8, duration: 0.4 }}
         >
           <Link
-            to="/orders" // Link to a hypothetical orders page
+            to="/orders"
             className="flex-1 inline-flex items-center justify-center bg-accent text-accent-foreground px-8 py-3 rounded-lg hover:bg-accent/80 transition-colors font-semibold"
           >
             Track Your Order
           </Link>
           <Link
             to="/"
-            className="flex-1 inline-flex items-center justify-center bg-[#00A99D] text-white px-8 py-3 rounded-lg hover:bg-[#00A99D]/90 transition-colors font-semibold" // Adjusted button color
+            className="flex-1 inline-flex items-center justify-center bg-[#00A99D] text-white px-8 py-3 rounded-lg hover:bg-[#00A99D]/90 transition-colors font-semibold"
           >
             Continue Shopping
           </Link>
@@ -216,11 +211,10 @@ const OrderConfirmation = ({
     </main>
   );
 };
-// --- END NEW COMPONENT ---
-
 
 export default function Checkout() {
-  const { cart, total, clearCart } = useCart();
+  // --- 2. GET finalTotal FROM useCart ---
+  const { cart, finalTotal, clearCart } = useCart(); // 'total' & 'finalTotal' are in USD
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -234,16 +228,15 @@ export default function Checkout() {
     expiryDate: "",
     cvv: "",
   });
-  
+
   const [errors, setErrors] = useState<Partial<typeof formData>>({});
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [orderPlaced, setOrderPlaced] = useState(false);
   // States for order confirmation details
   const [orderId, setOrderId] = useState("");
   const [estimatedDelivery, setEstimatedDelivery] = useState("");
-
 
   // --- Empty Cart Screen (No changes) ---
   if (cart.length === 0 && !orderPlaced) {
@@ -272,13 +265,14 @@ export default function Checkout() {
 
   // --- Render OrderConfirmation Component ---
   if (orderPlaced) {
+    // --- Pass finalTotal (USD) to OrderConfirmation ---
     return (
       <OrderConfirmation
         firstName={formData.firstName}
         email={formData.email}
         orderId={orderId}
         estimatedDelivery={estimatedDelivery}
-        totalAmount={total * 1.1} // Assuming 10% tax
+        totalAmount={finalTotal} // Pass the final USD total (after discounts)
       />
     );
   }
@@ -287,7 +281,7 @@ export default function Checkout() {
   const validateField = (name: string, value: string) => {
     let error = "";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!value) {
       error = "This field is required";
     } else {
@@ -302,10 +296,12 @@ export default function Checkout() {
           if (!/^\d{6}$/.test(value)) error = "Must be 6 digits";
           break;
         case "cardNumber":
-          if (!/^\d{16}$/.test(value.replace(/\s/g, ''))) error = "Must be 16 digits";
+          if (!/^\d{16}$/.test(value.replace(/\s/g, "")))
+            error = "Must be 16 digits";
           break;
         case "expiryDate":
-          if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(value)) error = "Must be in MM/YY format (e.g., 12/25)";
+          if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(value))
+            error = "Must be in MM/YY format (e.g., 12/25)";
           break;
         case "cvv":
           if (!/^\d{3,4}$/.test(value)) error = "Must be 3 or 4 digits";
@@ -318,19 +314,19 @@ export default function Checkout() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     // Clear error for this field as the user types
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-    
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     validateField(name, value);
-    
+
     // Special blur logic for zipCode
     if (name === "zipCode") {
       handleZipCodeBlur(value);
@@ -341,10 +337,10 @@ export default function Checkout() {
     if (zipCode.length !== 6) {
       return;
     }
-    
+
     setIsPincodeLoading(true);
     setErrors((prev) => ({ ...prev, city: undefined, state: undefined }));
-    
+
     try {
       const data = await getPincodeDetails(zipCode);
       if (data && data[0].Status === "Success" && data[0].PostOffice) {
@@ -370,14 +366,15 @@ export default function Checkout() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     let isValid = true;
     const newErrors: Partial<typeof formData> = {};
-    
+
     (Object.keys(formData) as Array<keyof typeof formData>).forEach((key) => {
       // For city and state, only require if zipCode is valid and they are empty
       if (key === "city" || key === "state") {
-        if (!formData[key] && !errors.zipCode) { // Only error if zipCode didn't fill it
+        if (!formData[key] && !errors.zipCode) {
+          // Only error if zipCode didn't fill it
           newErrors[key] = "This field is required";
           isValid = false;
         }
@@ -387,7 +384,7 @@ export default function Checkout() {
         if (!formData[key]) newErrors[key] = "This field is required";
       }
     });
-    
+
     setErrors((prev) => ({ ...prev, ...newErrors }));
 
     if (!isValid) {
@@ -398,15 +395,20 @@ export default function Checkout() {
 
     // --- All Good! Proceed to submit ---
     console.log("Form Submitted:", formData);
-    
+
     // Simulate API call for order submission
     setTimeout(() => {
       // Generate dummy order ID and delivery date
-      const dummyOrderId = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const dummyOrderId = Math.random()
+        .toString(36)
+        .substring(2, 10)
+        .toUpperCase();
       const deliveryDate = new Date();
       deliveryDate.setDate(deliveryDate.getDate() + 5); // 5 days from now
-      const estimatedDeliveryString = deliveryDate.toLocaleDateString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric'
+      const estimatedDeliveryString = deliveryDate.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
       });
 
       setOrderId(dummyOrderId);
@@ -416,15 +418,14 @@ export default function Checkout() {
       setIsSubmitting(false);
     }, 1500);
   };
-  
+
+  // --- 3. Grand Total is now finalTotal (USD) ---
+  const grandTotalUSD = finalTotal;
+
   // --- Checkout Form ---
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        theme="colored"
-      />
+      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
       <div className="max-w-7xl mx-auto px-4 py-12">
         <Link
           to="/cart"
@@ -439,7 +440,6 @@ export default function Checkout() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-8">
-              
               {/* --- 1. Shipping Info --- */}
               <motion.div
                 className="bg-card border border-border rounded-xl p-6"
@@ -447,7 +447,9 @@ export default function Checkout() {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">1</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">
+                    1
+                  </span>
                   Shipping Information
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
@@ -520,7 +522,10 @@ export default function Checkout() {
                     onBlur={handleInputBlur}
                     icon={MapPin}
                     error={errors.city}
-                    disabled={isPincodeLoading || formData.city !== ''}
+                    disabled={
+                      isPincodeLoading ||
+                      (formData.city !== "" && !errors.zipCode)
+                    }
                   />
                   <div className="sm:col-span-2">
                     <FormInput
@@ -531,7 +536,10 @@ export default function Checkout() {
                       onBlur={handleInputBlur}
                       icon={MapPin}
                       error={errors.state}
-                      disabled={isPincodeLoading || formData.state !== ''}
+                      disabled={
+                        isPincodeLoading ||
+                        (formData.state !== "" && !errors.zipCode)
+                      }
                     />
                   </div>
                 </div>
@@ -545,7 +553,9 @@ export default function Checkout() {
                 transition={{ delay: 0.1 }}
               >
                 <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">2</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">
+                    2
+                  </span>
                   Payment Information
                 </h2>
                 <div className="space-y-6">
@@ -598,7 +608,8 @@ export default function Checkout() {
                     Placing Order...
                   </>
                 ) : (
-                  `Place Order - $${(total * 1.1).toFixed(2)}`
+                  // --- 4. FORMAT Button Text (using finalTotal) ---
+                  `Place Order - ${formatPrice(grandTotalUSD)}`
                 )}
               </motion.button>
             </form>
@@ -622,7 +633,7 @@ export default function Checkout() {
                       {item.title.substring(0, 25)}... x {item.quantity}
                     </span>
                     <span className="font-semibold">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {formatPrice(item.discountedPrice * item.quantity)}
                     </span>
                   </div>
                 ))}
@@ -630,25 +641,23 @@ export default function Checkout() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">${total.toFixed(2)}</span>
+                  {/* --- Use original total for subtotal display --- */}
+                  <span className="font-semibold">{formatPrice(finalTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
                   <span className="text-green-500 font-semibold">Free</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax (10%)</span>
-                  <span className="font-semibold">
-                    ${(total * 0.1).toFixed(2)}
-                  </span>
-                </div>
+                {/* --- TAX LINE REMOVED --- */}
               </div>
+              {/* --- Updated Grand Total Section --- */}
               <div className="border-t border-border mt-6 pt-6 flex justify-between items-center">
                 <span className="text-lg font-bold text-foreground">
                   Grand Total
                 </span>
+                {/* --- 5. FORMAT Grand Total (using finalTotal) --- */}
                 <span className="text-2xl font-bold text-primary">
-                  ${(total * 1.1).toFixed(2)}
+                  {formatPrice(grandTotalUSD)}
                 </span>
               </div>
             </div>
